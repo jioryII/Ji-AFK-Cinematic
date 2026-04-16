@@ -34,7 +34,7 @@ Whether you’re chilling in your epic base, soaring with Elytra, or riding a mi
 ## Immersive AFK cinematic system with smooth camera paths
 
 <p align="center">
-  <img src="https://github.com/jioryII/Ji-AFK-Cinematic/blob/cc9f9e64844ae44adeddfb5bc3c42661500d6d0e/Video%20Project%205%20(2).gif?raw=true" width="100%" />
+  <img src="https://github.com/jioryII/Ji-AFK-Cinematic/blob/cc9f9e64844ae44adeddfb5bc3c42661500d6d0e/Video%20Project%205%20(2).gif?raw=true" width="80%" />
 </p>
 
 ----
