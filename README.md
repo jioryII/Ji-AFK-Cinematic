@@ -34,7 +34,8 @@ Whether you’re chilling in your epic base, soaring with Elytra, or riding a mi
 ## Immersive AFK cinematic system with smooth camera paths
 
 <p align="center">
-  <img src="https://wsrv.nl/?url=https%3A%2F%2Fdrive.google.com%2Fu%2F0%2Fdrive-viewer%2FAKGpihaQCqRxjeLgZ9lgixFzfDe6IzPj_yURxr0g-HFxWUrclQ_woBwduPRNhdHqsIUuoZOX6iF0ndlY2OtqSMRdbqAgdjprwBZGgYA%3Ds2560%3FauditContext%3DforDisplay&n=-1" width="100%" />
+  <img src="https://ucc5f7654f1bb8126b4c0e9fa187.previews.dropboxusercontent.com/p/thumb/AC_cH0agspt4AwRT7Y9C20p2FIh5M7zmzcbBcjLYT_wt7kseYOchtVHe327L8CoEDZKbu9Zdn2mfsygi637jM7McxnkweiM6lg9NW9DSQ6A-SqGipaP3pHx1cZyaPHUtghDi9wZojCOySVTiWLuwIzWgy2micfC3o2PTAG-ADFV3wPqUojSf5n1saOYjcDlJkabHvuS-l-4d5x8kIR69aqVXM83Kt-AdJqzMgeT3R0Jjptj6NbaaquGmu20Z2gsroLJ5tlWOvoumEGn9rQMajuZrCC2iG2Qp8mpOiWYgTIATr6L6mmTnva8qd-YDF1l_UCNusNS1Sc2t1hZNGRTXW1LqFJI1T6QrVJhqP-h_4eUzCrzpyDxgJNhUrIuJrhBs-QbGnPGZ4BaSlJB-mtezrGes31euLeyg6vnx56KKoP8Au5_gC4sDUxqeMjWZby3hd-Mnu2S5d9Ul7ILC1w9dcrUfI_WIcriqb7bg89xn11I5KwXs5Q2wK4gZ0UbUAvhC8Sz6sQWyES8w9hTF7r4XAeddg1xYEcqhi6_hBZ8ul_85EHHDy4ACbZCpJfAEaxm0wGCt2N1KyuERDL-ScCnrUdC9/p.gif?is_prewarmed=true
+" width="100%" />
 </p>
 
 ----
