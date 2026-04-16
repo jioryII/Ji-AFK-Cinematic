@@ -34,7 +34,7 @@ Whether you’re chilling in your epic base, soaring with Elytra, or riding a mi
 ## Immersive AFK cinematic system with smooth camera paths
 
 <p align="center">
-  <img src="https://drive.google.com/u/0/drive-viewer/AKGpihYZW4u4jifNXpIPB_wglqID44WSd_ByuS-pvSxLRzYOWLCO6Q27j3WBWWeYLZ9VpYX879ENew9Mey0dOfalVOmZVYxSiBNFR34=s2560?auditContext=forDisplay" width="100%" />
+  <img src="https://wsrv.nl/?url=https%3A%2F%2Fdrive.google.com%2Fu%2F0%2Fdrive-viewer%2FAKGpihaQCqRxjeLgZ9lgixFzfDe6IzPj_yURxr0g-HFxWUrclQ_woBwduPRNhdHqsIUuoZOX6iF0ndlY2OtqSMRdbqAgdjprwBZGgYA%3Ds2560%3FauditContext%3DforDisplay&n=-1" width="100%" />
 </p>
 
 ----
