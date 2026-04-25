@@ -1,0 +1,41 @@
+{
+  "config.ji_afkcinematic.title": "Ji AFK Cinematic \u2014 Settings",
+  "config.ji_afkcinematic.title_formatted": "\u00A76\u00A7lJi AFK Cinematic \u00A77\u2014 \u00A7fSettings",
+  "config.ji_afkcinematic.shot_duration": "Shot Duration: %ss",
+  "config.ji_afkcinematic.afk_threshold": "AFK Threshold: %ss",
+  "config.ji_afkcinematic.max_cycles": "Max Cycles: %s",
+  "config.ji_afkcinematic.camera_speed": "Camera Speed: %sx",
+  
+  "config.ji_afkcinematic.damage_action": "Damage Reaction",
+  "config.ji_afkcinematic.damage_action.ignore": "\u00A77Ignore",
+  "config.ji_afkcinematic.damage_action.cancel_cinematic": "\u00A7eCancel Camera",
+  "config.ji_afkcinematic.damage_action.pause_game": "\u00A7cPause Game",
+
+  "config.ji_afkcinematic.show_name": "Show Player Name",
+  "config.ji_afkcinematic.letterbox": "Letterbox Bars",
+  "config.ji_afkcinematic.music": "Cinematic Music",
+
+  "config.ji_afkcinematic.on": "\u00A7aON",
+  "config.ji_afkcinematic.off": "\u00A7cOFF",
+
+  "config.ji_afkcinematic.keybind": "Config Key: %s",
+  "config.ji_afkcinematic.keybind_waiting": "Config Key: \u00A7e> Press a key... <",
+  
+  "config.ji_afkcinematic.reset_defaults": "\u00A7e\u21BA Reset to Defaults",
+  "config.ji_afkcinematic.save": "\u00A7a\u2714 Save & Close",
+  "config.ji_afkcinematic.cancel": "\u00A7c\u2718 Cancel",
+
+  "config.ji_afkcinematic.tooltip.shot_duration": "How long each cinematic shot will last before cutting to another.",
+  "config.ji_afkcinematic.tooltip.afk_threshold": "Time without input before the cinematic automatically starts.",
+  "config.ji_afkcinematic.tooltip.max_cycles": "Maximum number of shots to show before returning to standard view.",
+  "config.ji_afkcinematic.tooltip.camera_speed": "Multiplier for how fast the camera travels in each shot.",
+  "config.ji_afkcinematic.tooltip.damage_action": "Action to take when you take damage while AFK.",
+  "config.ji_afkcinematic.tooltip.show_name": "Toggles your name tag visibility when in third person during AFK.",
+  "config.ji_afkcinematic.tooltip.letterbox": "Enables cinematic black bars on the top and bottom of the screen.",
+  "config.ji_afkcinematic.tooltip.music": "Enables random C418 background music while in cinematic mode.",
+  "config.ji_afkcinematic.tooltip.keybind": "Press to bind a new key to open this interface.",
+
+  "modmenu.descriptionTranslation.ji-afk-cinematic": "AAA Cinematic camera for AFK players with configurable shots, constant smooth camera, damage protection, and in-game settings.",
+  "modmenu.nameTranslation.ji-afk-cinematic": "Ji AFK Cinematic",
+  "modmenu.summaryTranslation.ji-afk-cinematic": "Cinematic camera for AFK players."
+}

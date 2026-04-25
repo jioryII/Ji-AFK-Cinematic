@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "ji-afk-cinematic",
+  "version": "${version}",
+  "name": "Ji AFK Cinematic",
+  "description": "Elevate your AFK moments with professional-grade cinematic camera tools. Featuring smooth velocity control, customizable transitions, and integrated player protection for seamless world capturing.",
+  "authors": [
+    "Jiory_"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/ji-afk-cinematic/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.ji.afkcinematic.JiAFKCinematic"
+    ],
+    "modmenu": [
+      "com.ji.afkcinematic.config.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "ji-afk-cinematic.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.1",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}

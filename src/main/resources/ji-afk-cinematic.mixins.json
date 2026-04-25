@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "com.ji.afkcinematic.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "CameraMixin",
+    "InGameHudMixin",
+    "MinecraftClientMixin",
+    "MouseMixin",
+    "KeyboardMixin",
+    "PlayerNameRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

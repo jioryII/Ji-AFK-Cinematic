@@ -1,0 +1,41 @@
+{
+  "config.ji_afkcinematic.title": "Ji AFK Cinematic \u2014 Configuraciones",
+  "config.ji_afkcinematic.title_formatted": "\u00A76\u00A7lJi AFK Cinematic \u00A77\u2014 \u00A7fAjustes",
+  "config.ji_afkcinematic.shot_duration": "Duraci\u00F3n de Toma: %ss",
+  "config.ji_afkcinematic.afk_threshold": "Retraso AFK: %ss",
+  "config.ji_afkcinematic.max_cycles": "Ciclos M\u00E1ximos: %s",
+  "config.ji_afkcinematic.camera_speed": "Vel. C\u00E1mara: %sx",
+
+  "config.ji_afkcinematic.damage_action": "Al recibir da\u00F1o",
+  "config.ji_afkcinematic.damage_action.ignore": "\u00A77Ignorar",
+  "config.ji_afkcinematic.damage_action.cancel_cinematic": "\u00A7eCancelar C\u00E1mara",
+  "config.ji_afkcinematic.damage_action.pause_game": "\u00A7cPausar Juego",
+
+  "config.ji_afkcinematic.show_name": "Mostrar Nombre",
+  "config.ji_afkcinematic.letterbox": "Barras Negras",
+  "config.ji_afkcinematic.music": "M\u00FAsica Ambiente",
+
+  "config.ji_afkcinematic.on": "\u00A7aS\u00CD",
+  "config.ji_afkcinematic.off": "\u00A7cNO",
+
+  "config.ji_afkcinematic.keybind": "Tecla Config: %s",
+  "config.ji_afkcinematic.keybind_waiting": "Tecla Config: \u00A7e> Presiona una tecla... <",
+
+  "config.ji_afkcinematic.reset_defaults": "\u00A7e\u21BA Restablecer Predeterminados",
+  "config.ji_afkcinematic.save": "\u00A7a\u2714 Guardar & Cerrar",
+  "config.ji_afkcinematic.cancel": "\u00A7c\u2718 Cancelar",
+
+  "config.ji_afkcinematic.tooltip.shot_duration": "Cu\u00E1nto tiempo durar\u00E1 cada toma de la c\u00E1mara antes de cambiar a otra.",
+  "config.ji_afkcinematic.tooltip.afk_threshold": "Tiempo requerido de inactividad antes de que la c\u00E1mara se inicie autom\u00E1ticamente.",
+  "config.ji_afkcinematic.tooltip.max_cycles": "N\u00FAmero m\u00E1ximo de tomas a mostrar antes de regresar a la vista normal.",
+  "config.ji_afkcinematic.tooltip.camera_speed": "Multiplicador de la velocidad a la que viaja la c\u00E1mara en cada toma.",
+  "config.ji_afkcinematic.tooltip.damage_action": "Acci\u00F3n a tomar si recibes da\u00F1o mientras est\u00E1s ausente (AFK).",
+  "config.ji_afkcinematic.tooltip.show_name": "Alterna la visibilidad de tu nombre cuando la c\u00E1mara est\u00E1 activa.",
+  "config.ji_afkcinematic.tooltip.letterbox": "Activa las barras negras de estilo cinematogr\u00E1fico en la pantalla.",
+  "config.ji_afkcinematic.tooltip.music": "Activa la m\u00FAsica ambiental aleatoria de C418 al entrar en modo c\u00E1mara.",
+  "config.ji_afkcinematic.tooltip.keybind": "Presiona para asignar una nueva tecla para abrir esta interfaz.",
+
+  "modmenu.descriptionTranslation.ji-afk-cinematic": "C\u00E1mara cinematogr\u00E1fica de calidad AAA para jugadores AFK. Tomas configurables, movimientos suaves, protecci\u00F3n de da\u00F1o y configuraciones dentro del juego.",
+  "modmenu.nameTranslation.ji-afk-cinematic": "Ji AFK Cinematic",
+  "modmenu.summaryTranslation.ji-afk-cinematic": "C\u00E1mara cinematogr\u00E1fica para jugadores ausentes (AFK)."
+}
