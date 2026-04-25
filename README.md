@@ -1,11 +1,10 @@
 ![portada](https://cdn.modrinth.com/data/cached_images/a67a56c9956340770155e78c1906bc9e6efa3cf3.png)
 
-<p align="center">
-<a href="https://github.com/jioryII">
-
-<img alt="github" width="60px" src="https://cdn.modrinth.com/data/cached_images/0197a0dce279690de37a1f899b3d25edf9d3bac2.png">
-</a>
+<p align="center" style="text-align: center;">
+  <a href="https://github.com/jioryII/Ji-AFK-Cinematic"><img src="https://tr7zw.github.io/uikit/social_buttons_icon/Github-Button-64.png" alt="GitHub" style="margin: 5px 10px;"></a>
+  <a href="https://modrinth.com/mod/ji-afk-cinematic"><img src="https://tr7zw.github.io/uikit/social_buttons_icon/Modrinth-Button-64.png" alt="GitHub" style="margin: 5px 10px;"></a>
 </p>
+
 
 
 <p align="center"><img src="https://media.tenor.com/L8MBo0DXxoEAAAAj/minecraft.gif" width="200"/></p>
