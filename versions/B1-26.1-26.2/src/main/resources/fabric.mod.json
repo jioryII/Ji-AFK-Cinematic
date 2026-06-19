@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "ji-afk-cinematic",
+  "version": "${version}",
+  "name": "Ji AFK Cinematic",
+  "description": "Immersive 4K cinematic camera system for AFK players.",
+  "authors": [
+    "jiory_"
+  ],
+  "contact": {
+    "issues": "https://github.com/jioryII/Ji-AFK-Cinematic/issues",
+    "homepage": "https://modrinth.com/mod/ji-afk-cinematic",
+    "sources": "https://github.com/jioryII/Ji-AFK-Cinematic"
+  },
+  "license": "MIT",
+  "icon": "assets/ji-afk-cinematic/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.ji.afkcinematic.JiAFKCinematic"
+    ],
+    "modmenu": [
+      "com.ji.afkcinematic.config.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "ji-afk-cinematic.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.1",
+    "minecraft": ">=26.1",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
