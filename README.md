@@ -1,9 +1,9 @@
 ![portada](https://cdn.modrinth.com/data/cached_images/a67a56c9956340770155e78c1906bc9e6efa3cf3.png)
 
 <p align="center" style="text-align: center;">
-  <a href="https://discord.gg/sE27D5SNaq"><img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/Discord-Button-64.png" alt="Discord" width="80%" style="max-width: 80px; margin: 5px 10px;"></a>
-  <a href="https://github.com/jioryII/Ji-AFK-Cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/Github-Button-64.png" alt="GitHub" width="80%" style="max-width: 80px; margin: 5px 10px;"></a>
-  <a href="https://modrinth.com/mod/ji-afk-cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/Modrinth-Button-64.png" alt="Modrinth" width="80%" style="max-width: 80px; margin: 5px 10px;"></a>
+  <a href="https://discord.gg/sE27D5SNaq"><img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/Discord-Button-64.png" alt="Discord" width="7%"></a>
+  <a href="https://github.com/jioryII/Ji-AFK-Cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/Github-Button-64.png" alt="GitHub" width="7%"></a>
+  <a href="https://modrinth.com/mod/ji-afk-cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/Modrinth-Button-64.png" alt="Modrinth" width="7%"></a>
 </p>
 
 
