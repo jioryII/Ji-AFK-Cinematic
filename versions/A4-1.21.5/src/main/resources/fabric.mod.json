@@ -8,9 +8,9 @@
     "jiory_"
   ],
   "contact": {
-    "issues": "https://github.com/jioryII/Ji-AFK-Cinematic/issues",
-    "homepage": "https://modrinth.com/mod/ji-afk-cinematic",
-    "sources": "https://github.com/jioryII/Ji-AFK-Cinematic"
+    "issues": "https://discord.gg/sE27D5SNaq",
+    "homepage": "https://discord.gg/sE27D5SNaq",
+    "sources": "https://discord.gg/sE27D5SNaq"
   },
   "license": "MIT",
   "icon": "assets/ji-afk-cinematic/icon.png",
@@ -28,7 +28,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.18.1",
-    "minecraft": ">=1.21.2 <=1.21.5",
+    "minecraft": ">=1.21.5 <=1.21.5",
     "java": ">=21",
     "fabric-api": "*"
   },
