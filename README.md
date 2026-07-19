@@ -1,9 +1,9 @@
-![portada](https://cdn.modrinth.com/data/cached_images/a67a56c9956340770155e78c1906bc9e6efa3cf3.png)
+![portada](https://raw.githubusercontent.com/jioryII/Ji-Assets/main/ji-afk/portada-ji-afk.png)
 
 <p align="center" style="text-align: center;">
-  <a href="https://discord.gg/sE27D5SNaq"><img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/Discord-Button-64.png" alt="Discord" width="7%"></a>
-  <a href="https://github.com/jioryII/Ji-AFK-Cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/Github-Button-64.png" alt="GitHub" width="7%"></a>
-  <a href="https://modrinth.com/mod/ji-afk-cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/Modrinth-Button-64.png" alt="Modrinth" width="7%"></a>
+  <a href="https://discord.gg/sE27D5SNaq"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Discord-Button-64.png" alt="Discord" width="7%"></a>
+  <a href="https://github.com/jioryII/Ji-AFK-Cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Github-Button-64.png" alt="GitHub" width="7%"></a>
+  <a href="https://modrinth.com/mod/ji-afk-cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Modrinth-Button-64.png" alt="Modrinth" width="7%"></a>
 </p>
 
 
@@ -34,7 +34,7 @@ Whether you’re chilling in your epic base, soaring with Elytra, or riding a mi
 ## Immersive AFK cinematic system with smooth camera paths
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/jioryII/Ji-AFK-Cinematic/main/multimedia/showcase.gif" width="80%" />
+  <img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/ji-afk/showcase-ji-afk.gif" width="80%" />
 </p>
 
 ----

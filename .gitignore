@@ -40,3 +40,10 @@ run/
 # OS junk files
 .DS_Store
 Thumbs.db
+
+# Multimedia centralized in https://github.com/jioryII/Ji-Assets
+/multimedia/
+
+# Development-only artifacts (kept in Ji-AFK-Cinematic-DEV, not in public repo)
+/mod-testing/
+/HUD-HIDING-FIX-PLAN.md
