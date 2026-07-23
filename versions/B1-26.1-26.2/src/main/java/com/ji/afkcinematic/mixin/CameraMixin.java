@@ -21,7 +21,7 @@ public abstract class CameraMixin {
     @Shadow
     protected abstract void setRotation(float yaw, float pitch);
 
-    @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;calculateFov(F)F"))
+    @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;calculateFov(F)F"), require = 0)
     private void onCameraUpdate(DeltaTracker tickCounter, CallbackInfo ci) {
         CinematicState state = CinematicManager.getState();
         if (state == CinematicState.CINEMATIC_ACTIVE) {
@@ -42,7 +42,7 @@ public abstract class CameraMixin {
         }
     }
 
-    @Inject(method = "isDetached", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isDetached", at = @At("HEAD"), cancellable = true, require = 0)
     private void overrideThirdPerson(CallbackInfoReturnable<Boolean> cir) {
         if (CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE) {
             cir.setReturnValue(true);

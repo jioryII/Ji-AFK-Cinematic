@@ -1,23 +1,54 @@
 package com.ji.afkcinematic.mixin;
 
-import com.ji.afkcinematic.afk.AFKDetector;
-import net.minecraft.client.Keyboard;
+import com.ji.afkcinematic.input.KeySequenceTracker;
 
+import com.ji.afkcinematic.afk.AFKDetector;
+import com.ji.afkcinematic.config.ConfigManager;
+import com.ji.afkcinematic.config.ConfigScreen;
+import com.ji.afkcinematic.config.ModConfig;
+import com.ji.afkcinematic.cinematic.CinematicManager;
+import com.ji.afkcinematic.render.ToggleToastManager;
+import net.minecraft.client.Keyboard;
+import net.minecraft.client.MinecraftClient;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * Keyboard mixin for AFK detection.
- * 1.21.11 signature: onKey(long window, int action, int key, int scanCode, int modifiers)
- * Key capture for config screen is now handled by ConfigScreen.keyPressed(KeyInput).
- */
 @Mixin(Keyboard.class)
 public class KeyboardMixin {
-    @Inject(method = "onKey", at = @At("HEAD"))
-    private void onKeyPress(long window, int action, int key, int scanCode, int modifiers, CallbackInfo ci) {
-        // Register activity for AFK detection on any key event
+    @Inject(method = "onKey", at = @At("HEAD"), require = 0)
+    private void onKeyPress(long window, int key, int scanCode, int action, int modifiers, CallbackInfo ci) {
         AFKDetector.registerActivity();
+        if (action != GLFW.GLFW_PRESS) return;
+        processShortcuts(window, key);
+    }
+
+    private void processShortcuts(long window, int keyCode) {
+        ModConfig cfg = ConfigManager.getConfig();
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        int[] menuFirst = KeySequenceTracker.acceptedFirstKeys(cfg.menuKey1);
+        int[] toggleFirst = KeySequenceTracker.acceptedFirstKeys(cfg.toggleKey1);
+
+        if (KeySequenceTracker.checkMenu(keyCode, menuFirst, cfg.menuKey2)) {
+            if (client.currentScreen == null) {
+                client.setScreen(new ConfigScreen(client.currentScreen));
+            }
+            KeySequenceTracker.resetSequence(true);
+            return;
+        }
+
+        if (KeySequenceTracker.checkToggle(keyCode, toggleFirst, cfg.toggleKey2)) {
+            cfg.modEnabled = !cfg.modEnabled;
+            ConfigManager.saveConfig();
+            ToggleToastManager.show(cfg.modEnabled);
+            if (!cfg.modEnabled) {
+                CinematicManager.forceDeactivate();
+            }
+            KeySequenceTracker.resetSequence(false);
+            return;
+        }
     }
 }

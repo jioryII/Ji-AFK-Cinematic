@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SoundSystem.class)
 public class SoundSystemMixin {
 
-    @Inject(method = "getSoundVolume", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getSoundVolume", at = @At("RETURN"), cancellable = true, require = 0)
     private void onGetSoundVolume(SoundCategory category, CallbackInfoReturnable<Float> cir) {
         if (category == SoundCategory.MUSIC) {
             float original = cir.getReturnValue();

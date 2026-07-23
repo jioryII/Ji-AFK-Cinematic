@@ -10,12 +10,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Minecraft.class)
 public class MinecraftClientMixin {
-    @Inject(method = "startAttack", at = @At("HEAD"))
+    @Inject(method = "startAttack", at = @At("HEAD"), require = 0)
     private void onAttack(CallbackInfoReturnable<Boolean> cir) {
         AFKDetector.registerActivity();
     }
 
-    @Inject(method = "startUseItem", at = @At("HEAD"))
+    @Inject(method = "startUseItem", at = @At("HEAD"), require = 0)
     private void onItemUse(CallbackInfo ci) {
         AFKDetector.registerActivity();
     }

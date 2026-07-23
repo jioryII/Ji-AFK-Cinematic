@@ -23,7 +23,7 @@ public class LetterboxRenderer {
     public static void init() {
         // 1.21.11: RenderTickCounter has getTickProgress(boolean), not getTickDelta(boolean)
         HudRenderCallback.EVENT.register((drawContext, renderTickCounter) ->
-            render(drawContext, renderTickCounter.getTickDelta(false))
+            render(drawContext, renderTickCounter.getTickProgress(false))
         );
     }
 

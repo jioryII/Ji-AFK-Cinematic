@@ -1,8 +1,8 @@
 package com.ji.afkcinematic.mixin;
 
+import com.ji.afkcinematic.input.KeySequenceTracker;
+
 import com.ji.afkcinematic.afk.AFKDetector;
-import com.ji.afkcinematic.cinematic.CinematicManager;
-import com.ji.afkcinematic.cinematic.CinematicState;
 import net.minecraft.client.MouseHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -10,8 +10,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Mouse mixin for AFK detection and cinematic interaction (Mojmap 26.x).
- * Optimized to remove redundant logic and clean up imports.
+ * Mouse mixin for AFK detection (Mojmap 26.x).
+ * Tracks cursor movement and click activity to reset the AFK timer.
+ * Does NOT cancel any events — that would freeze the user's input
+ * if cinematic state ever desynchronises.
  */
 @Mixin(MouseHandler.class)
 public class MouseMixin {
@@ -19,7 +21,7 @@ public class MouseMixin {
     private double lastX = 0;
     private double lastY = 0;
 
-    @Inject(method = "onMove", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "onMove", at = @At("HEAD"), require = 0)
     private void onCursorMove(long window, double x, double y, CallbackInfo ci) {
         // Register activity if movement exceeds threshold
         if (Math.abs(x - lastX) > 2.0 || Math.abs(y - lastY) > 2.0) {
@@ -27,19 +29,19 @@ public class MouseMixin {
             lastX = x;
             lastY = y;
         }
-
-        // Cancel event if cinematic is active to prevent mouse input from affecting camera
-        if (CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE) {
-            ci.cancel();
-        }
+        // NOTE: do NOT cancel onMove here. The cinematic camera rotation is handled
+        // inside CameraMixin via Camera.update, so cancelling the OS-level mouse event
+        // was redundant and (if state ever desyncs) could freeze the user's cursor,
+        // preventing all button interactions in 26.x.
     }
 
-    @Inject(method = "onButton", at = @At("HEAD"))
+    @Inject(method = "onButton", at = @At("HEAD"), require = 0)
     private void onMouseClick(long window, net.minecraft.client.input.MouseButtonInfo input, int action, CallbackInfo ci) {
         AFKDetector.registerActivity();
+        KeySequenceTracker.resetAll();
     }
 
-    @Inject(method = "onScroll", at = @At("HEAD"))
+    @Inject(method = "onScroll", at = @At("HEAD"), require = 0)
     private void onMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
         AFKDetector.registerActivity();
     }

@@ -19,6 +19,7 @@ public class CinematicMusicInstance extends MovingSoundInstance {
         this.repeat = false;
         this.repeatDelay = 0;
         this.volume = 0.01f;
+        this.targetVolume = com.ji.afkcinematic.config.ConfigManager.getConfig().cinematicMusicVolume;
         this.pitch = 1.0f;
         this.relative = true;
     }
@@ -33,6 +34,12 @@ public class CinematicMusicInstance extends MovingSoundInstance {
 
     public void forceStop() {
         this.setDone();
+    }
+
+    public void refreshTargetVolume() {
+        if (this.targetVolume > 0.0f) {
+            this.targetVolume = com.ji.afkcinematic.config.ConfigManager.getConfig().cinematicMusicVolume;
+        }
     }
 
     @Override

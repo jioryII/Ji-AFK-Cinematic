@@ -19,7 +19,7 @@ import com.ji.afkcinematic.render.PlayerForceRenderer;
 @Mixin(EntityRenderDispatcher.class)
 public class EntityRenderDispatcherMixin {
 
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "render", at = @At("HEAD"), require = 0)
     private <E extends Entity> void trackPlayerRender(E entity, double x, double y, double z, float yaw, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
         if (CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE) {
             MinecraftClient client = MinecraftClient.getInstance();

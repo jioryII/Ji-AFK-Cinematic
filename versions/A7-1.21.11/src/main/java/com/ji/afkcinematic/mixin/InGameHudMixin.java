@@ -12,7 +12,7 @@ import net.minecraft.client.render.RenderTickCounter;
 
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true, require = 0)
     private void onRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (HUDController.isHidden()) {
             // Manually render our black bars since we are aborting the rest of the HUD rendering

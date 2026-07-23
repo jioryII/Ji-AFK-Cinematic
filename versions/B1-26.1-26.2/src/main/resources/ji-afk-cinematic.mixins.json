@@ -1,16 +1,21 @@
 {
   "required": true,
   "package": "com.ji.afkcinematic.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "mixins": [],
   "client": [
     "CameraMixin",
     "InGameHudMixin",
+    "GameRendererMixin",
+    "LevelRendererMixin",
     "MinecraftClientMixin",
     "MouseMixin",
     "KeyboardMixin",
     "PlayerNameRendererMixin",
-    "EntityRenderDispatcherMixin"
+    "EntityRenderDispatcherMixin",
+    "EntityVisibilityMixin",
+    "MusicManagerMixin",
+    "SoundManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

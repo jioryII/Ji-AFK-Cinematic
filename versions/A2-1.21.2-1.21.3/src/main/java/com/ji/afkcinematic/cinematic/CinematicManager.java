@@ -51,6 +51,17 @@ public class CinematicManager implements AFKListener {
         }
     }
 
+    public static void forceDeactivate() {
+        if (state != CinematicState.CINEMATIC_ACTIVE) {
+            com.ji.afkcinematic.music.CinematicMusicManager.forceStop();
+            reset();
+            return;
+        }
+        com.ji.afkcinematic.music.CinematicMusicManager.forceStop();
+        reset();
+        com.ji.afkcinematic.afk.AFKDetector.setLockedOut(false);
+    }
+
     private static void tick() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.world == null || client.isPaused()) {

@@ -25,7 +25,7 @@ public class PlayerForceRenderer {
                 AbstractClientPlayerEntity player = client.player;
                 if (player != null) {
                     Vec3d cameraPos = context.camera().getPos();
-                    float tickDelta = context.tickCounter().getTickDelta(true);
+                    float tickDelta = context.tickCounter().getTickProgress(true);
                     Vec3d lerpedPos = player.getLerpedPos(tickDelta);
                     double x = lerpedPos.x - cameraPos.x;
                     double y = lerpedPos.y - cameraPos.y;

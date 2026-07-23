@@ -1,34 +1,55 @@
 package com.ji.afkcinematic.mixin;
 
+import com.ji.afkcinematic.input.KeySequenceTracker;
+
 import com.ji.afkcinematic.afk.AFKDetector;
+import com.ji.afkcinematic.config.ConfigManager;
+import com.ji.afkcinematic.config.ConfigScreen;
+import com.ji.afkcinematic.config.ModConfig;
+import com.ji.afkcinematic.cinematic.CinematicManager;
+import com.ji.afkcinematic.render.ToggleToastManager;
 import net.minecraft.client.KeyboardHandler;
-import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.Minecraft;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * Keyboard mixin for AFK detection.
- * 1.21.11 signature: onKey(long window, int action, int input)
- * Key capture for config screen is now handled by ConfigScreen.keyPressed(int).
- */
-@Mixin(net.minecraft.client.KeyboardHandler.class)
+@Mixin(KeyboardHandler.class)
 public class KeyboardMixin {
-    @Inject(method = "keyPress", at = @At("HEAD"))
+    @Inject(method = "keyPress", at = @At("HEAD"), require = 0)
     private void onKeyPress(long window, int action, net.minecraft.client.input.KeyEvent event, CallbackInfo ci) {
-        // Register activity for AFK detection on any key event
         AFKDetector.registerActivity();
+        if (action != GLFW.GLFW_PRESS) return;
+        int keyCode = event.key();
+        processShortcuts(window, keyCode);
+    }
 
-        // Direct keybind intercept for 26.x (Guaranteed to work without reflections)
-        int keyCode = com.ji.afkcinematic.config.ConfigManager.getConfig().configKeyCode;
-        if (keyCode != -1 && action == org.lwjgl.glfw.GLFW.GLFW_PRESS) {
-            if (org.lwjgl.glfw.GLFW.glfwGetKey(window, keyCode) == org.lwjgl.glfw.GLFW.GLFW_PRESS) {
-                net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
-                if (com.ji.afkcinematic.ScreenHelper.getCurrentScreen(client) == null) {
-                    com.ji.afkcinematic.ScreenHelper.setScreen(client, new com.ji.afkcinematic.config.ConfigScreen(null));
-                }
+    private void processShortcuts(long window, int keyCode) {
+        ModConfig cfg = ConfigManager.getConfig();
+        Minecraft client = Minecraft.getInstance();
+
+        int[] menuFirst = KeySequenceTracker.acceptedFirstKeys(cfg.menuKey1);
+        int[] toggleFirst = KeySequenceTracker.acceptedFirstKeys(cfg.toggleKey1);
+
+        if (KeySequenceTracker.checkMenu(keyCode, menuFirst, cfg.menuKey2)) {
+            if (com.ji.afkcinematic.ScreenHelper.getCurrentScreen(client) == null) {
+                com.ji.afkcinematic.ScreenHelper.setScreen(client, new ConfigScreen(null));
             }
+            KeySequenceTracker.resetSequence(true);
+            return;
+        }
+
+        if (KeySequenceTracker.checkToggle(keyCode, toggleFirst, cfg.toggleKey2)) {
+            cfg.modEnabled = !cfg.modEnabled;
+            ConfigManager.saveConfig();
+            ToggleToastManager.show(cfg.modEnabled);
+            if (!cfg.modEnabled) {
+                CinematicManager.forceDeactivate();
+            }
+            KeySequenceTracker.resetSequence(false);
+            return;
         }
     }
 }

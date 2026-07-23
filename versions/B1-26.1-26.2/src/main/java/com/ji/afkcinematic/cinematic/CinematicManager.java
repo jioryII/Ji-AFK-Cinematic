@@ -50,6 +50,17 @@ public class CinematicManager implements AFKListener {
         }
     }
 
+    public static void forceDeactivate() {
+        if (state != CinematicState.CINEMATIC_ACTIVE) {
+            com.ji.afkcinematic.music.CinematicMusicManager.forceStop();
+            reset();
+            return;
+        }
+        com.ji.afkcinematic.music.CinematicMusicManager.forceStop();
+        reset();
+        com.ji.afkcinematic.afk.AFKDetector.setLockedOut(false);
+    }
+
     private static void tick() {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null || client.level == null || client.isPaused()) {
@@ -70,7 +81,7 @@ public class CinematicManager implements AFKListener {
                 AFKDetector.setLockedOut(true);
                 
                 if (dAction == DamageAction.PAUSE_GAME) {
-                    client.setScreenAndShow(new PauseScreen(true));
+                    com.ji.afkcinematic.ScreenHelper.setScreen(client, new PauseScreen(true));
                 }
                 return;
             }

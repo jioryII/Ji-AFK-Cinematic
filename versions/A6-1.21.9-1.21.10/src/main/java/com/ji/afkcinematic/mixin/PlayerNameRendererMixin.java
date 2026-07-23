@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(EntityRenderer.class)
 public abstract class PlayerNameRendererMixin<T extends Entity> {
 
-    @Inject(method = "hasLabel", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "hasLabel", at = @At("HEAD"), cancellable = true, require = 0)
     private void forceShowLocalPlayerName(T entity, double distance, CallbackInfoReturnable<Boolean> cir) {
         if (CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE
                 

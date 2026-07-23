@@ -36,6 +36,12 @@ public class CinematicMusicManager {
         isOurMusicPlaying = true;
     }
 
+    public static void updateVolume() {
+        if (currentInstance != null) {
+            currentInstance.refreshTargetVolume();
+        }
+    }
+
     public static void stopMusic() {
         if (isOurMusicPlaying) {
             state = FadeState.FADE_OUT_CINEMATIC;
@@ -159,7 +165,6 @@ public class CinematicMusicManager {
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_WAIT);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_PIGSTEP);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_OTHERSIDE);
-            addTrackSafe(() -> SoundEvents.MUSIC_DISC_5);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_RELIC);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_CREATOR);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_CREATOR_MUSIC_BOX);

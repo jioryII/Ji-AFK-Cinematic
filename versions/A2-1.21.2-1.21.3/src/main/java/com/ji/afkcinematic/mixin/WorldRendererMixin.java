@@ -20,7 +20,7 @@ public class WorldRendererMixin {
         return client.chunkCullingEnabled;
     }
 
-    @Inject(method = "isRenderingReady", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isRenderingReady", at = @At("HEAD"), cancellable = true, require = 0)
     private void forcePlayerRenderingReady(net.minecraft.util.math.BlockPos pos, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {
         if (CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE) {
             net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();

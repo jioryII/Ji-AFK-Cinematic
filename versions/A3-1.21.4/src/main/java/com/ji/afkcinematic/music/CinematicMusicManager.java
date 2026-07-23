@@ -30,6 +30,12 @@ public class CinematicMusicManager {
         isOurMusicPlaying = true;
     }
 
+    public static void updateVolume() {
+        if (currentInstance != null) {
+            currentInstance.refreshTargetVolume();
+        }
+    }
+
     public static void stopMusic() {
         if (isOurMusicPlaying) {
             state = FadeState.FADE_OUT_CINEMATIC;
@@ -38,6 +44,15 @@ public class CinematicMusicManager {
             }
             isOurMusicPlaying = false;
         }
+    }
+
+    public static void forceStop() {
+        if (currentInstance != null) {
+            currentInstance.forceStop();
+            currentInstance = null;
+        }
+        isOurMusicPlaying = false;
+        state = FadeState.IDLE;
     }
 
     private static void tick(MinecraftClient client) {

@@ -1,7 +1,6 @@
 package com.ji.afkcinematic;
 
 import com.ji.afkcinematic.config.ConfigManager;
-import com.ji.afkcinematic.config.ConfigScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import org.slf4j.Logger;
@@ -10,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.ji.afkcinematic.afk.AFKDetector;
 import com.ji.afkcinematic.cinematic.CinematicManager;
 import com.ji.afkcinematic.music.CinematicMusicManager;
+import com.ji.afkcinematic.render.CinematicHUDManager;
 import com.ji.afkcinematic.render.LetterboxRenderer;
 import net.minecraft.client.Minecraft;
 
@@ -20,7 +20,7 @@ public class JiAFKCinematic implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("Initializing {} v2.2.0", MOD_NAME);
+        LOGGER.info("Initializing {} v2.2.1", MOD_NAME);
         ConfigManager.loadConfig();
 
         AFKDetector.init();
@@ -28,15 +28,12 @@ public class JiAFKCinematic implements ClientModInitializer {
         CinematicMusicManager.init();
         LetterboxRenderer.init();
 
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            CinematicHUDManager.forceRestore();
+        });
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             LetterboxRenderer.tick();
-            handleConfigKeybind(client);
         });
-    }
-
-    private boolean wasKeyDown = false;
-
-    private void handleConfigKeybind(Minecraft client) {
-        // Obsolete reflection block removed. Now handled directly via KeyboardMixin.
     }
 }

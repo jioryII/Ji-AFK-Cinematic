@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MusicTracker.class)
 public class MusicTrackerMixin {
-    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true, require = 0)
     private void onTick(CallbackInfo ci) {
         if (CinematicMusicManager.isOurMusicPlaying) {
             ci.cancel();

@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Entity.class)
 public abstract class EntityVisibilityMixin {
 
-    @Inject(method = "getVisibilityBoundingBox", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getVisibilityBoundingBox", at = @At("HEAD"), cancellable = true, require = 0)
     private void expandVisibilityBoxInCinematic(CallbackInfoReturnable<Box> cir) {
         if (CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE) {
             MinecraftClient client = MinecraftClient.getInstance();

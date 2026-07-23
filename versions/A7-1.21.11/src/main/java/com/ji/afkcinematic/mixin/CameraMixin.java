@@ -19,7 +19,7 @@ public abstract class CameraMixin {
     @Shadow
     protected abstract void setRotation(float yaw, float pitch);
 
-    @Inject(method = "update", at = @At("TAIL"))
+    @Inject(method = "update", at = @At("TAIL"), require = 0)
     private void onCameraUpdate(net.minecraft.world.World area, net.minecraft.entity.Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
         CinematicState state = CinematicManager.getState();
         if (state == CinematicState.CINEMATIC_ACTIVE) {
@@ -42,7 +42,7 @@ public abstract class CameraMixin {
         }
     }
 
-    @Inject(method = "isThirdPerson", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isThirdPerson", at = @At("HEAD"), cancellable = true, require = 0)
     private void overrideThirdPerson(org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {
         if (CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE) {
             cir.setReturnValue(true);
