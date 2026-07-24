@@ -23,12 +23,10 @@ public class MouseMixin {
 
     @Inject(method = "onMove", at = @At("HEAD"), require = 0)
     private void onCursorMove(long window, double x, double y, CallbackInfo ci) {
-        // Register activity if movement exceeds threshold
-        if (Math.abs(x - lastX) > 2.0 || Math.abs(y - lastY) > 2.0) {
-            AFKDetector.registerActivity();
-            lastX = x;
-            lastY = y;
-        }
+        // Register activity on every cursor movement — any single pixel cancels AFK / cinematic.
+        AFKDetector.registerActivity();
+        lastX = x;
+        lastY = y;
         // NOTE: do NOT cancel onMove here. The cinematic camera rotation is handled
         // inside CameraMixin via Camera.update, so cancelling the OS-level mouse event
         // was redundant and (if state ever desyncs) could freeze the user's cursor,

@@ -18,7 +18,7 @@ public class LetterboxRenderer {
     private static float currentProgress = 0.0f;
 
     private static final float FADE_IN_TICKS = 60.0f; // 3 seconds
-    private static final float FADE_OUT_TICKS = 40.0f; // 2 seconds
+    private static final float FADE_OUT_TICKS = 8.0f; // 0.4 seconds
 
     public static void init() {
         // 1.21.11: RenderTickCounter has getTickProgress(boolean), not getTickDelta(boolean)

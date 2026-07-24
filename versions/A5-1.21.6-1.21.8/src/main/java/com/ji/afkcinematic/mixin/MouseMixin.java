@@ -25,11 +25,9 @@ public class MouseMixin {
 
     @Inject(method = "onCursorPos", at = @At("HEAD"), require = 0)
     private void onCursorMove(long window, double x, double y, CallbackInfo ci) {
-        if (Math.abs(x - lastX) > 2.0 || Math.abs(y - lastY) > 2.0) {
-            AFKDetector.registerActivity();
-            lastX = x;
-            lastY = y;
-        }
+        AFKDetector.registerActivity();
+        lastX = x;
+        lastY = y;
     }
 
     @Inject(method = "onMouseButton", at = @At("HEAD"), require = 0)

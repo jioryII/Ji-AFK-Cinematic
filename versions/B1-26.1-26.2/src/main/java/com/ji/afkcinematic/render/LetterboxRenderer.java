@@ -22,7 +22,7 @@ public class LetterboxRenderer {
     private static long lastTime = 0;
 
     private static final float FADE_IN_MS = 3000.0f; // 3 seconds
-    private static final float FADE_OUT_MS = 2000.0f; // 2 seconds
+    private static final float FADE_OUT_MS = 400.0f; // 0.4 seconds
 
     public static void init() {
         HudElementRegistry.addLast(HUD_ID, (drawContext, deltaTracker) ->

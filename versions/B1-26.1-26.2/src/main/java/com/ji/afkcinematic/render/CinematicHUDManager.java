@@ -18,7 +18,7 @@ public class CinematicHUDManager {
     }
 
     public static void deactivate() {
-        LetterboxRenderer.reset();
+        LetterboxRenderer.fadeOut();
         HUDController.setHidden(false);
     }
 
