@@ -2,23 +2,13 @@ package com.ji.afkcinematic.mixin;
 
 import com.ji.afkcinematic.cinematic.CinematicManager;
 import com.ji.afkcinematic.cinematic.CinematicState;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.WorldRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Inject;
 
 @Mixin(WorldRenderer.class)
 public class WorldRendererMixin {
-
-    @Redirect(method = "setupTerrain", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;chunkCullingEnabled:Z"))
-    private boolean disableOcclusionCullingInCinematic(MinecraftClient client) {
-        if (CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE) {
-            return false;
-        }
-        return client.chunkCullingEnabled;
-    }
 
     @Inject(method = "isRenderingReady", at = @At("HEAD"), cancellable = true, require = 0)
     private void forcePlayerRenderingReady(net.minecraft.util.math.BlockPos pos, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {

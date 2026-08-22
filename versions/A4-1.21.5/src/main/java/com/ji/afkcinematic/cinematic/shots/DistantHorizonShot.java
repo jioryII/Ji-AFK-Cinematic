@@ -24,6 +24,7 @@ public class DistantHorizonShot extends AbstractCameraShot {
     public Vec3d updatePosition(float progress, float speedMultiplier, float tickDelta) {
         if (!isPlayerAvailable()) return Vec3d.ZERO;
 
+        // Linear interpolation — constant speed, no easing
         float scaledProgress = Math.min(1.0f, progress * speedMultiplier);
         float currentDist = lerp(scaledProgress, START_DIST, END_DIST);
 

@@ -1,5 +1,6 @@
 package com.ji.afkcinematic.render;
 
+import com.ji.afkcinematic.JiAFKCinematic;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
@@ -22,13 +23,18 @@ public final class ToggleToastManager {
         Component title = Component.translatable("overlay.ji_afkcinematic.toggle." + key)
             .withStyle(color);
 
-        // Use a fresh SystemToastId each call so consecutive toggles stack as
-        // separate toasts (one per slot) instead of rewriting the same slot.
-        manager.addToast(new SystemToast(
-            new SystemToast.SystemToastId(DISPLAY_MS),
-            title,
-            null
-        ));
+        // Guard the SystemToast constructor: if the SystemToastId/SystemToast signature
+        // changes in a future MC version we degrade gracefully (no toast) instead of
+        // throwing on the client thread.
+        try {
+            manager.addToast(new SystemToast(
+                new SystemToast.SystemToastId(DISPLAY_MS),
+                title,
+                null
+            ));
+        } catch (Throwable t) {
+            JiAFKCinematic.LOGGER.warn("Could not show toggle toast", t);
+        }
     }
 
     private static ToastManager getToastManager(Minecraft client) {

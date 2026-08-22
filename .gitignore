@@ -24,9 +24,11 @@ hs_err_pid*
 
 # Fabric/Minecraft modding ignores
 .gradle/
+/.gradle-codex-check/
 build/
 bin/
 run/
+logs/
 !compilaciones/
 
 # IDE files

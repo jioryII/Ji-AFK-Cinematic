@@ -5,24 +5,28 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.sound.SoundEvents;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class CinematicMusicManager {
     public static boolean isOurMusicPlaying = false;
     private static CinematicMusicInstance currentInstance;
-    
+
     public enum FadeState { IDLE, FADE_OUT_GAME, FADE_IN_CINEMATIC, FADE_OUT_CINEMATIC }
     private static FadeState state = FadeState.IDLE;
+    // Public hook for legacy SoundSystemMixin in A1-A3 (multiplies the vanilla volume
+    // during a cinematic). Unused in A4+ and B1 but kept for binary compatibility.
     public static float vanillaMusicVolumeMultiplier = 1.0f;
     private static float originalMusicVolume = -1.0f;
     private static float currentFade = 1.0f;
     private static final float FADE_SPEED = 0.01f;
 
-    private static final List<Object> shuffleBag = new ArrayList<>();
-    private static int shuffleIndex = 0;
-
-    public static void forceReloadMusic() { shuffleBag.clear(); }
+    private static final List<Object> trackPool = new ArrayList<>();
+    private static final BalancedShuffleBag<Object> shuffleBag = new BalancedShuffleBag<>();
+    // Cached reflection: SoundManager#updateSoundVolume is resolved once instead of
+    // scanning getMethods() every fade tick (~200 times per cinematic start/stop).
+    private static java.lang.reflect.Method cachedUpdateSoundVolume;
+    private static boolean updateSoundVolumeMissing = false;
 
     public static void init() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> tick(client));
@@ -34,12 +38,6 @@ public class CinematicMusicManager {
         originalMusicVolume = getMusicOptionVolume(MinecraftClient.getInstance());
         currentFade = 1.0f;
         isOurMusicPlaying = true;
-    }
-
-    public static void updateVolume() {
-        if (currentInstance != null) {
-            currentInstance.refreshTargetVolume();
-        }
     }
 
     public static void stopMusic() {
@@ -120,22 +118,34 @@ public class CinematicMusicManager {
     }
 
     private static void setMusicOptionVolume(MinecraftClient client, float volume) {
+        if (!Float.isFinite(volume)) return; // guard against NaN/Inf reaching the sound system
         try {
             client.options.getSoundVolumeOption(net.minecraft.sound.SoundCategory.MUSIC).setValue((double) volume);
-            if (client.getSoundManager() != null) {
-                for (java.lang.reflect.Method m : client.getSoundManager().getClass().getMethods()) {
-                    if (m.getName().equals("updateSoundVolume")) {
-                        if (m.getParameterCount() == 1) {
-                            m.invoke(client.getSoundManager(), net.minecraft.sound.SoundCategory.MUSIC);
-                            break;
-                        } else if (m.getParameterCount() == 2) {
-                            m.invoke(client.getSoundManager(), net.minecraft.sound.SoundCategory.MUSIC, volume);
+            if (client.getSoundManager() != null && !updateSoundVolumeMissing) {
+                java.lang.reflect.Method m = cachedUpdateSoundVolume;
+                if (m == null) {
+                    for (java.lang.reflect.Method candidate : client.getSoundManager().getClass().getMethods()) {
+                        if (candidate.getName().equals("updateSoundVolume")) {
+                            cachedUpdateSoundVolume = candidate;
+                            m = candidate;
                             break;
                         }
                     }
+                    if (m == null) {
+                        updateSoundVolumeMissing = true; // don't keep re-scanning a missing method
+                    }
+                }
+                if (m != null) {
+                    if (m.getParameterCount() == 1) {
+                        m.invoke(client.getSoundManager(), net.minecraft.sound.SoundCategory.MUSIC);
+                    } else if (m.getParameterCount() == 2) {
+                        m.invoke(client.getSoundManager(), net.minecraft.sound.SoundCategory.MUSIC, volume);
+                    }
                 }
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            com.ji.afkcinematic.JiAFKCinematic.LOGGER.warn("Failed to set music option volume to {}", volume, e);
+        }
     }
 
     private static void stopVanillaMusic(MinecraftClient client) {
@@ -145,7 +155,7 @@ public class CinematicMusicManager {
     }
 
     private static void fillShuffleBag() {
-        shuffleBag.clear();
+        trackPool.clear();
         addTrackSafe(() -> SoundEvents.MUSIC_GAME);
         addTrackSafe(() -> SoundEvents.MUSIC_CREATIVE);
         addTrackSafe(() -> SoundEvents.MUSIC_MENU);
@@ -165,29 +175,36 @@ public class CinematicMusicManager {
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_WAIT);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_PIGSTEP);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_OTHERSIDE);
-            addTrackSafe(() -> SoundEvents.MUSIC_DISC_RELIC);
+                        addTrackSafe(() -> SoundEvents.MUSIC_DISC_RELIC);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_CREATOR);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_CREATOR_MUSIC_BOX);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_PRECIPICE);
         }
         
-        Collections.shuffle(shuffleBag);
-        shuffleIndex = 0;
+        shuffleBag.replace(trackPool);
     }
 
     private static void addTrackSafe(java.util.function.Supplier<Object> getter) {
         try {
             Object track = getter.get();
-            if (track != null) shuffleBag.add(track);
-        } catch (Throwable e) {}
+            if (track != null && !isForbiddenTrack(track)) trackPool.add(track);
+        } catch (Throwable e) {
+            com.ji.afkcinematic.JiAFKCinematic.LOGGER.warn("Failed to resolve a cinematic music track", e);
+        }
+    }
+
+    /** These narrative horror recordings are never eligible for cinematic playback. */
+    private static boolean isForbiddenTrack(Object track) {
+        return Objects.equals(track, SoundEvents.MUSIC_DISC_5)
+                || Objects.equals(track, SoundEvents.MUSIC_DISC_11)
+                || Objects.equals(track, SoundEvents.MUSIC_DISC_13);
     }
 
     private static Object getNextTrack() {
-        if (shuffleBag.isEmpty() || shuffleIndex >= shuffleBag.size()) {
+        if (shuffleBag.isCycleComplete()) {
             fillShuffleBag();
         }
-        if (shuffleBag.isEmpty()) return null;
-        return shuffleBag.get(shuffleIndex++);
+        return shuffleBag.next();
     }
 
     private static void playCinematicMusicSafe(MinecraftClient client) {
@@ -210,6 +227,8 @@ public class CinematicMusicManager {
             if (client.getSoundManager() != null) {
                 client.getSoundManager().play(currentInstance);
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            com.ji.afkcinematic.JiAFKCinematic.LOGGER.warn("Failed to play cinematic music", e);
+        }
     }
 }

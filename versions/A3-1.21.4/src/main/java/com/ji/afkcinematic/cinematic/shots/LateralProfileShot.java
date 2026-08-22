@@ -26,6 +26,7 @@ public class LateralProfileShot extends AbstractCameraShot {
     public Vec3d updatePosition(float progress, float speedMultiplier, float tickDelta) {
         if (!isPlayerAvailable()) return Vec3d.ZERO;
 
+        // Linear progress — constant speed, scaled by multiplier
         float currentAngle = startAngle + (progress * ORBIT_DEGREES * speedMultiplier * (clockwise ? 1 : -1));
         Vec3d offset = getCircularOffset(currentAngle, DISTANCE);
 

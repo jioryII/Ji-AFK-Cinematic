@@ -7,8 +7,8 @@ public interface CameraShot {
     void start();
 
     /**
-     * Updates and returns the camera position for the current progress.
-     * @param progress 0.0 to 1.0 representing time through the shot
+     * Updates and returns the camera position for the elapsed shot time.
+     * @param progress elapsed seconds since the shot began
      * @param speedMultiplier camera speed multiplier from config (1.0 = normal)
      * @param tickDelta sub-tick interpolation for smooth tracking of moving entities
      */
@@ -16,7 +16,7 @@ public interface CameraShot {
 
     /**
      * Returns the camera pitch (up/down) in degrees.
-     * @param progress 0.0 to 1.0
+     * @param progress elapsed seconds since the shot began
      * @param speedMultiplier camera speed multiplier
      * @param tickDelta sub-tick interpolation
      */
@@ -24,10 +24,19 @@ public interface CameraShot {
 
     /**
      * Returns the camera yaw (left/right) in degrees.
-     * @param progress 0.0 to 1.0
+     * @param progress elapsed seconds since the shot began
      * @param speedMultiplier camera speed multiplier
      * @param tickDelta sub-tick interpolation
      */
     float updateYaw(float progress, float speedMultiplier, float tickDelta);
+
+    /** Optional Dutch angle in degrees. Positive values rotate the horizon clockwise. */
+    default float updateRoll(float progress, float speedMultiplier, float tickDelta) {
+        return 0.0f;
+    }
+
+    default String getId() {
+        return getClass().getSimpleName();
+    }
 }
 

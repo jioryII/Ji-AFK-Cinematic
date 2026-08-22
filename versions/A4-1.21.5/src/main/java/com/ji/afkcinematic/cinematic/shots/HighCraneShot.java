@@ -25,6 +25,7 @@ public class HighCraneShot extends AbstractCameraShot {
     public Vec3d updatePosition(float progress, float speedMultiplier, float tickDelta) {
         if (!isPlayerAvailable()) return Vec3d.ZERO;
 
+        // Linear interpolation — constant speed, no easing
         float scaledProgress = Math.min(1.0f, progress * speedMultiplier);
         float currentDist = lerp(scaledProgress, START_DIST, END_DIST);
         float currentHeight = lerp(scaledProgress, START_HEIGHT, END_HEIGHT);
@@ -36,6 +37,7 @@ public class HighCraneShot extends AbstractCameraShot {
 
     @Override
     public float updatePitch(float progress, float speedMultiplier, float tickDelta) {
+        // Linear pitch increase as camera rises
         float scaledProgress = Math.min(1.0f, progress * speedMultiplier);
         return lerp(scaledProgress, 20f, 45f);
     }

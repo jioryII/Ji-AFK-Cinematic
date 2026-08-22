@@ -12,6 +12,7 @@ import java.util.List;
 public class AFKDetector {
     private static int ticksSinceLastActivity = 0;
     private static boolean isLockedOut = false;
+    private static boolean triggered = false; // one-shot guard so >= threshold fires exactly once
     private static final List<AFKListener> LISTENERS = new ArrayList<>();
 
     public static void init() {
@@ -24,12 +25,18 @@ public class AFKDetector {
         }
     }
 
+    /** Iterate a defensive copy so listeners that (de)register during dispatch don't CME. */
+    private static void dispatch(java.util.function.Consumer<AFKListener> action) {
+        new ArrayList<>(LISTENERS).forEach(action);
+    }
+
     private static void tick() {
         if (!com.ji.afkcinematic.config.ConfigManager.getConfig().modEnabled) return;
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.world == null) {
             ticksSinceLastActivity = 0;
-            LISTENERS.forEach(AFKListener::onReset);
+            triggered = false;
+            dispatch(AFKListener::onReset);
             return;
         }
 
@@ -39,8 +46,12 @@ public class AFKDetector {
 
         ticksSinceLastActivity++;
         int threshold = ConfigManager.getConfig().afkThresholdTicks;
-        if (ticksSinceLastActivity == threshold) { // Trigger only once when threshold is reached
-            LISTENERS.forEach(AFKListener::onAFKTriggered);
+        // Use >= with a one-shot guard: if the threshold is lowered (e.g. config edited
+        // mid-idle) while ticksSinceLastActivity is already past the new value, == would
+        // never match again and AFK would silently never trigger until next activity.
+        if (ticksSinceLastActivity >= threshold && !triggered) {
+            triggered = true;
+            dispatch(AFKListener::onAFKTriggered);
         }
     }
 
@@ -48,11 +59,12 @@ public class AFKDetector {
      * Resets activity timer. Removes lockout. Notifies activity.
      */
     public static void registerActivity() {
-        if (ticksSinceLastActivity == 0 && !isLockedOut) return;
+        if (ticksSinceLastActivity == 0 && !isLockedOut && !triggered) return;
 
         ticksSinceLastActivity = 0;
         isLockedOut = false;
-        LISTENERS.forEach(AFKListener::onActivityDetected);
+        triggered = false;
+        dispatch(AFKListener::onActivityDetected);
     }
 
     public static void setLockedOut(boolean lockedOut) {

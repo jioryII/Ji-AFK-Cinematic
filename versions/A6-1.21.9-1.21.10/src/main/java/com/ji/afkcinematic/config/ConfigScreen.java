@@ -25,6 +25,14 @@ public class ConfigScreen extends Screen {
     private ButtonWidget reportButton;
     private ButtonWidget modEnabledButton;
 
+    // Estado para restaurar el label tras UNSUPPORTED_KEY_REJECTED.
+    // Cuando processRebindKey devuelve 3, mostramos un mensaje rojo temporal
+    // (~1.5s) y luego restauramos el label original. Usamos un counter en
+    // tick() en vez de threads (todo corre en el client thread).
+    private ButtonWidget pendingLabelTarget;
+    private Text pendingLabelOriginal;
+    private int pendingLabelTicksRemaining;
+
     public ConfigScreen(Screen parent) {
         super(Text.translatable("config.ji_afkcinematic.title"));
         this.parent = parent;
@@ -38,6 +46,9 @@ public class ConfigScreen extends Screen {
         this.editConfig.afkThresholdSeconds = current.afkThresholdSeconds;
         this.editConfig.maxCycles = current.maxCycles;
         this.editConfig.cameraSpeed = current.cameraSpeed;
+        this.editConfig.characterShotPercentage = current.characterShotPercentage;
+        this.editConfig.persistentMode = current.persistentMode;
+        this.editConfig.cameraRotationEnabled = current.cameraRotationEnabled;
         this.editConfig.damageAction = current.damageAction;
         this.editConfig.extendedMusic = current.extendedMusic;
         this.editConfig.modEnabled = current.modEnabled;
@@ -151,6 +162,29 @@ public class ConfigScreen extends Screen {
         });
         yLeft += entryHeight;
 
+        this.addDrawableChild(new SliderWidget(
+                col1X, yLeft, widgetWidth, 20,
+                Text.translatable("config.ji_afkcinematic.shot_mix",
+                        editConfig.characterShotPercentage, 100 - editConfig.characterShotPercentage),
+                editConfig.characterShotPercentage / 100.0
+        ) {
+            private int snappedValue() { return (int) Math.round(this.value * 10.0) * 10; }
+            @Override
+            protected void updateMessage() {
+                int val = snappedValue();
+                this.setMessage(Text.translatable("config.ji_afkcinematic.shot_mix", val, 100 - val));
+            }
+            @Override
+            protected void applyValue() {
+                int val = snappedValue();
+                this.value = val / 100.0;
+                editConfig.characterShotPercentage = val;
+                updateMessage();
+            }
+            { setTooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.shot_mix"))); }
+        });
+        yLeft += entryHeight;
+
         this.addDrawableChild(ButtonWidget.builder(
                 getDamageActionText(),
                 button -> {
@@ -159,6 +193,29 @@ public class ConfigScreen extends Screen {
                     button.setMessage(getDamageActionText());
                 }
         ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.damage_action"))).dimensions(col2X, yRight, widgetWidth, 20).build());
+        yRight += entryHeight;
+
+        this.addDrawableChild(ButtonWidget.builder(
+                getPersistentModeText(),
+                button -> {
+                    editConfig.persistentMode = editConfig.persistentMode.next();
+                    button.setMessage(getPersistentModeText());
+                }
+        ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.persistent_cinematics")
+                .append("\n").append(Text.literal("[BETA]").formatted(Formatting.YELLOW))))
+         .dimensions(col2X, yRight, widgetWidth, 20).build());
+        yRight += entryHeight;
+
+        this.addDrawableChild(ButtonWidget.builder(
+                Text.translatable("config.ji_afkcinematic.camera_rotation")
+                        .append(": ").append(getOnOffText(editConfig.cameraRotationEnabled)),
+                button -> {
+                    editConfig.cameraRotationEnabled = !editConfig.cameraRotationEnabled;
+                    button.setMessage(Text.translatable("config.ji_afkcinematic.camera_rotation")
+                            .append(": ").append(getOnOffText(editConfig.cameraRotationEnabled)));
+                }
+        ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.camera_rotation")))
+         .dimensions(col2X, yRight, widgetWidth, 20).build());
         yRight += entryHeight;
 
         this.addDrawableChild(ButtonWidget.builder(
@@ -190,20 +247,24 @@ public class ConfigScreen extends Screen {
 
         int centerStartY = Math.max(yLeft, yRight) + 5;
 
+        // Menu shortcut. Clicking it starts the normal two-key rebind flow.
         menuKeyButton = ButtonWidget.builder(
             getMenuKeysText(),
             button -> startMenuRebind()
         ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.menu_keys")))
          .dimensions(centerX - widgetWidth / 2, centerStartY, widgetWidth, 20).build();
         this.addDrawableChild(menuKeyButton);
+
         centerStartY += entryHeight;
 
+        // Quick-toggle shortcut.
         toggleKeyButton = ButtonWidget.builder(
             getToggleKeysText(),
             button -> startToggleRebind()
         ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.toggle_keys")))
          .dimensions(centerX - widgetWidth / 2, centerStartY, widgetWidth, 20).build();
         this.addDrawableChild(toggleKeyButton);
+
         centerStartY += entryHeight;
 
         modEnabledButton = ButtonWidget.builder(
@@ -216,7 +277,7 @@ public class ConfigScreen extends Screen {
         this.addDrawableChild(modEnabledButton);
 
         this.reportButton = ButtonWidget.builder(
-                Text.literal("\u00A7e\u26A0"),
+                Text.literal("§e⚠"),
                 ConfirmLinkScreen.opening(this, "https://discord.gg/sE27D5SNaq")
         ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.report"))).dimensions(this.width - 35, this.height - 35, 30, 30).build();
         this.addDrawableChild(this.reportButton);
@@ -252,7 +313,24 @@ public class ConfigScreen extends Screen {
                 .append(Text.translatable("config.ji_afkcinematic.damage_action." + editConfig.damageAction.name().toLowerCase()));
     }
 
+    private Text getPersistentModeText() {
+        Formatting color = switch (editConfig.persistentMode) {
+            case NORMAL -> Formatting.GRAY;
+            case INTERACTIVE -> Formatting.YELLOW;
+            case PERSISTENT -> Formatting.RED;
+        };
+        String key = "config.ji_afkcinematic.persistent_mode."
+                + editConfig.persistentMode.name().toLowerCase();
+        return Text.translatable("config.ji_afkcinematic.persistent_cinematics")
+                .append(": ").append(Text.translatable(key).formatted(color));
+    }
+
     private Text getMenuKeysText() {
+        if (isMenuDisabled()) {
+            return Text.empty()
+                    .append(Text.translatable("config.ji_afkcinematic.menu_keys.label").formatted(Formatting.WHITE))
+                    .append(Text.translatable("config.ji_afkcinematic.keybind_disabled_label"));
+        }
         String keys = formatKeys(editConfig.menuKey1, editConfig.menuKey2);
         return Text.empty()
                 .append(Text.translatable("config.ji_afkcinematic.menu_keys.label").formatted(Formatting.WHITE))
@@ -260,6 +338,11 @@ public class ConfigScreen extends Screen {
     }
 
     private Text getToggleKeysText() {
+        if (isToggleDisabled()) {
+            return Text.empty()
+                    .append(Text.translatable("config.ji_afkcinematic.toggle_keys.label").formatted(Formatting.WHITE))
+                    .append(Text.translatable("config.ji_afkcinematic.keybind_disabled_label"));
+        }
         String keys = formatKeys(editConfig.toggleKey1, editConfig.toggleKey2);
         return Text.empty()
                 .append(Text.translatable("config.ji_afkcinematic.toggle_keys.label").formatted(Formatting.WHITE))
@@ -267,13 +350,13 @@ public class ConfigScreen extends Screen {
     }
 
     private Text getActiveDisabledText(boolean value) {
-        if (value) return Text.literal("\u00A7a").append(Text.translatable("config.ji_afkcinematic.active"));
-        return Text.literal("\u00A7c").append(Text.translatable("config.ji_afkcinematic.disabled"));
+        if (value) return Text.literal("§a").append(Text.translatable("config.ji_afkcinematic.active"));
+        return Text.literal("§c").append(Text.translatable("config.ji_afkcinematic.disabled"));
     }
 
     private Text getOnOffText(boolean value) {
-        if (value) return Text.literal("\u00A7a").append(Text.translatable("config.ji_afkcinematic.on"));
-        return Text.literal("\u00A7c").append(Text.translatable("config.ji_afkcinematic.off"));
+        if (value) return Text.literal("§a").append(Text.translatable("config.ji_afkcinematic.on"));
+        return Text.literal("§c").append(Text.translatable("config.ji_afkcinematic.off"));
     }
 
     @Override
@@ -283,14 +366,30 @@ public class ConfigScreen extends Screen {
         if (this.reportButton != null) {
             long time = System.currentTimeMillis() / 800;
             int phase = (int) (time % 3);
-            if (phase == 0) this.reportButton.setMessage(Text.literal("\u00A7e\u26A0"));
-            else if (phase == 1) this.reportButton.setMessage(Text.literal("\u00A7b\u2666"));
-            else this.reportButton.setMessage(Text.literal("\u00A7a\u2709"));
+            if (phase == 0) this.reportButton.setMessage(Text.literal("§e⚠"));
+            else if (phase == 1) this.reportButton.setMessage(Text.literal("§b♦"));
+            else this.reportButton.setMessage(Text.literal("§a✉"));
         }
 
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("\u00A76\u00A7lJi AFK Cinematic"), this.width / 2, 55, 0xFFFFFFFF);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("\u00A75By jiory_"), this.width / 2, 65, 0xFFFFFFFF);
-        // rebindStatusMsg ya no se muestra en el menu (solo en el boton correspondiente).
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§6§lJi AFK Cinematic"), this.width / 2, 55, 0xFFFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§5By jiory_"), this.width / 2, 65, 0xFFFFFFFF);
+    }
+
+    /**
+     * Hardening v2.2.2: contador en client tick para restaurar el label tras
+     * UNSUPPORTED_KEY_REJECTED. Llamado por Screen cada frame.
+     */
+    @Override
+    public void tick() {
+        super.tick();
+        if (pendingLabelTicksRemaining > 0 && pendingLabelTarget != null) {
+            pendingLabelTicksRemaining--;
+            if (pendingLabelTicksRemaining == 0 && pendingLabelOriginal != null) {
+                pendingLabelTarget.setMessage(pendingLabelOriginal);
+                pendingLabelTarget = null;
+                pendingLabelOriginal = null;
+            }
+        }
     }
 
     @Override
@@ -334,6 +433,20 @@ public class ConfigScreen extends Screen {
             int result = com.ji.afkcinematic.input.KeySequenceTracker.processRebindKey(keyCode, out);
             if (result == -1) { cancelRebind(); return true; }
 
+            // GLFW_KEY_UNKNOWN y codigos fuera de rango no son atajos persistibles.
+            if (result == com.ji.afkcinematic.input.KeySequenceTracker.UNSUPPORTED_KEY_REJECTED) {
+                ButtonWidget target = (rebindState == RebindState.MENU_WAITING_FIRST
+                                  || rebindState == RebindState.MENU_WAITING_SECOND)
+                                  ? menuKeyButton : toggleKeyButton;
+                pendingLabelTarget = target;
+                pendingLabelOriginal = target.getMessage();
+                target.setMessage(Text.literal("Unsupported key")
+                    .formatted(Formatting.RED));
+                // 30 ticks = 1.5s @ 20 TPS
+                pendingLabelTicksRemaining = 30;
+                return true;
+            }
+
             if (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.MENU_WAITING_SECOND) {
                 if (result == 1) {
                     rebindState = RebindState.MENU_WAITING_SECOND;
@@ -366,12 +479,17 @@ public class ConfigScreen extends Screen {
         MinecraftClient.getInstance().setScreen(this.parent);
     }
 
+    /** Nombre legible para keycodes GLFW validos. */
     private static String getKeyName(int keyCode) {
         if (keyCode == -1) return "NONE";
-        String name = GLFW.glfwGetKeyName(keyCode, 0);
-        if (name != null) {
-            return name.toUpperCase();
+
+        if (!com.ji.afkcinematic.input.KeySequenceTracker.isBindableKeyCode(keyCode)) {
+            return "Unsupported Key #" + keyCode;
         }
+
+        String name = GLFW.glfwGetKeyName(keyCode, 0);
+        if (name != null) return name.toUpperCase();
+
         return switch (keyCode) {
             case GLFW.GLFW_KEY_F1 -> "F1";
             case GLFW.GLFW_KEY_F2 -> "F2";
@@ -401,6 +519,23 @@ public class ConfigScreen extends Screen {
             case GLFW.GLFW_KEY_END -> "End";
             case GLFW.GLFW_KEY_PAGE_UP -> "Page Up";
             case GLFW.GLFW_KEY_PAGE_DOWN -> "Page Down";
+            case GLFW.GLFW_KEY_LEFT -> "←";
+            case GLFW.GLFW_KEY_RIGHT -> "→";
+            case GLFW.GLFW_KEY_UP -> "↑";
+            case GLFW.GLFW_KEY_DOWN -> "↓";
+            case GLFW.GLFW_KEY_A -> "A"; case GLFW.GLFW_KEY_B -> "B"; case GLFW.GLFW_KEY_C -> "C";
+            case GLFW.GLFW_KEY_D -> "D"; case GLFW.GLFW_KEY_E -> "E"; case GLFW.GLFW_KEY_F -> "F";
+            case GLFW.GLFW_KEY_G -> "G"; case GLFW.GLFW_KEY_H -> "H"; case GLFW.GLFW_KEY_I -> "I";
+            case GLFW.GLFW_KEY_J -> "J"; case GLFW.GLFW_KEY_K -> "K"; case GLFW.GLFW_KEY_L -> "L";
+            case GLFW.GLFW_KEY_M -> "M"; case GLFW.GLFW_KEY_N -> "N"; case GLFW.GLFW_KEY_O -> "O";
+            case GLFW.GLFW_KEY_P -> "P"; case GLFW.GLFW_KEY_Q -> "Q"; case GLFW.GLFW_KEY_R -> "R";
+            case GLFW.GLFW_KEY_S -> "S"; case GLFW.GLFW_KEY_T -> "T"; case GLFW.GLFW_KEY_U -> "U";
+            case GLFW.GLFW_KEY_V -> "V"; case GLFW.GLFW_KEY_W -> "W"; case GLFW.GLFW_KEY_X -> "X";
+            case GLFW.GLFW_KEY_Y -> "Y"; case GLFW.GLFW_KEY_Z -> "Z";
+            case GLFW.GLFW_KEY_0 -> "0"; case GLFW.GLFW_KEY_1 -> "1"; case GLFW.GLFW_KEY_2 -> "2";
+            case GLFW.GLFW_KEY_3 -> "3"; case GLFW.GLFW_KEY_4 -> "4"; case GLFW.GLFW_KEY_5 -> "5";
+            case GLFW.GLFW_KEY_6 -> "6"; case GLFW.GLFW_KEY_7 -> "7"; case GLFW.GLFW_KEY_8 -> "8";
+            case GLFW.GLFW_KEY_9 -> "9";
             default -> "Key " + keyCode;
         };
     }
@@ -419,20 +554,21 @@ public class ConfigScreen extends Screen {
         if (isNone2) return n1 + " + NONE";
         return n1 + " + " + n2;
     }
+
     private void startMenuRebind() {
         backupMenu1 = editConfig.menuKey1; backupMenu2 = editConfig.menuKey2;
         rebindState = RebindState.MENU_WAITING_FIRST; com.ji.afkcinematic.input.KeySequenceTracker.startRebind();
         rebindStartedMs = System.currentTimeMillis();
         menuKeyButton.setMessage(Text.translatable("config.ji_afkcinematic.key_waiting_first"));
-
     }
+
     private void startToggleRebind() {
         backupToggle1 = editConfig.toggleKey1; backupToggle2 = editConfig.toggleKey2;
         rebindState = RebindState.TOGGLE_WAITING_FIRST; com.ji.afkcinematic.input.KeySequenceTracker.startRebind();
         rebindStartedMs = System.currentTimeMillis();
         toggleKeyButton.setMessage(Text.translatable("config.ji_afkcinematic.key_waiting_first"));
-
     }
+
     private void cancelRebind() {
         if (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.MENU_WAITING_SECOND) {
             editConfig.menuKey1 = backupMenu1; editConfig.menuKey2 = backupMenu2;
@@ -440,10 +576,20 @@ public class ConfigScreen extends Screen {
             editConfig.toggleKey1 = backupToggle1; editConfig.toggleKey2 = backupToggle2;
         }
         rebindState = RebindState.IDLE; com.ji.afkcinematic.input.KeySequenceTracker.resetRebind();
-        refreshKeyButtonLabels(); 
+        refreshKeyButtonLabels();
     }
+
     private void refreshKeyButtonLabels() {
         menuKeyButton.setMessage(getMenuKeysText());
         toggleKeyButton.setMessage(getToggleKeysText());
     }
+
+    private boolean isMenuDisabled() {
+        return editConfig.menuKey1 == -1 && editConfig.menuKey2 == -1;
+    }
+
+    private boolean isToggleDisabled() {
+        return editConfig.toggleKey1 == -1 && editConfig.toggleKey2 == -1;
+    }
+
 }

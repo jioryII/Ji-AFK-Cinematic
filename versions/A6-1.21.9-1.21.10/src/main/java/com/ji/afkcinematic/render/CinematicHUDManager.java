@@ -1,14 +1,9 @@
 package com.ji.afkcinematic.render;
 
 import com.ji.afkcinematic.config.ModConfig;
-import com.ji.afkcinematic.config.ConfigManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ChatScreen;
 
-/**
- * Specialized manager for HUD visibility and letterbox effects during cinematic mode.
- * Also forces vanilla hideGui=true so Xaero's, Jade, and other HUD-尊重 mods
- * follow F1 semantics during the cinematic.
- */
 public class CinematicHUDManager {
     private static boolean captured = false;
     private static boolean previousHideGui = false;
@@ -35,6 +30,19 @@ public class CinematicHUDManager {
             MinecraftClient.getInstance().options.hudHidden = previousHideGui;
             captured = false;
         }
+    }
+
+    public static void updateChatVisibility(ModConfig config) {
+        if (!captured) return;
+        MinecraftClient client = MinecraftClient.getInstance();
+        // Chat must remain visible even if the player entered AFK with F1/HUD hidden.
+        // The original preference is still restored verbatim on teardown.
+        client.options.hudHidden = !isPersistentChatOpen(config);
+    }
+
+    public static boolean isPersistentChatOpen(ModConfig config) {
+        return config.persistentMode != com.ji.afkcinematic.config.PersistentCinematicMode.NORMAL
+                && MinecraftClient.getInstance().currentScreen instanceof ChatScreen;
     }
 
     public static void forceRestore() {

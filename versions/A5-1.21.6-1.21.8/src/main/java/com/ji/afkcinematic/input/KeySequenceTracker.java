@@ -18,6 +18,9 @@ public final class KeySequenceTracker {
 
     public static final long SEQUENCE_TIMEOUT_MS = 1500L;
 
+    /** Resultado de rebind para GLFW_KEY_UNKNOWN o codigos fuera del rango GLFW. */
+    public static final int UNSUPPORTED_KEY_REJECTED = 3;
+
     // === Estado runtime por secuencia ===
     private static int menuFirstKey = -1;
     private static long menuFirstKeyTime = 0L;
@@ -27,6 +30,15 @@ public final class KeySequenceTracker {
     // === Estado rebind (single, solo se rebinda una secuencia a la vez) ===
     private static int rebindFirstKey = -1;
     private static long rebindFirstTimeMs = 0L;
+
+    /**
+     * GLFW no define teclas multimedia: normalmente llegan como KEY_UNKNOWN (-1)
+     * o el firmware las convierte en una tecla F indistinguible. Solo aceptamos
+     * keycodes que GLFW documenta para evitar eventos sinteticos fuera de rango.
+     */
+    public static boolean isBindableKeyCode(int keyCode) {
+        return keyCode >= GLFW.GLFW_KEY_SPACE && keyCode <= GLFW.GLFW_KEY_LAST;
+    }
 
     /**
      * Dado un key configurado por el usuario, devuelve el conjunto de teclas
@@ -63,6 +75,20 @@ public final class KeySequenceTracker {
      */
     public static boolean checkToggle(int keyCode, int[] acceptedFirstKeys, int secondKey) {
         return check(keyCode, acceptedFirstKeys, secondKey, false);
+    }
+
+    /**
+     * Cancela una combinacion cuando se suelta su primera tecla. Esto convierte
+     * los atajos en chords reales y evita que una tecla Fn/media mapeada a F7
+     * deje una secuencia armada para otro evento inyectado posteriormente.
+     */
+    public static void onKeyReleased(int keyCode) {
+        if (keyCode < 0) {
+            resetAll();
+            return;
+        }
+        if (menuFirstKey == keyCode) resetSequence(true);
+        if (toggleFirstKey == keyCode) resetSequence(false);
     }
 
     private static boolean check(int keyCode, int[] acceptedFirstKeys, int secondKey, boolean isMenu) {
@@ -148,6 +174,7 @@ public final class KeySequenceTracker {
      *   0 = aun no completo (esperando segunda)
      *   1 = primera tecla capturada
      *   2 = segunda tecla capturada (par listo)
+     *   3 = {@link #UNSUPPORTED_KEY_REJECTED} — tecla desconocida/no bindeable
      *  -1 = timeout/cancelado
      */
     public static int processRebindKey(int keyCode, int[] outKeys) {
@@ -156,6 +183,12 @@ public final class KeySequenceTracker {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             resetRebind();
             return -1;
+        }
+
+        // GLFW entrega teclas multimedia no representables como KEY_UNKNOWN.
+        // No consumimos el evento para que el usuario pueda elegir otra tecla.
+        if (!isBindableKeyCode(keyCode)) {
+            return UNSUPPORTED_KEY_REJECTED;
         }
 
         if (rebindFirstKey == -1) {

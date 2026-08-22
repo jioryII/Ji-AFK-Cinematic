@@ -27,7 +27,7 @@
     "ji-afk-cinematic.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.18.1",
+    "fabricloader": ">=0.16.9",
     "minecraft": ">=1.21 <=1.21.1",
     "java": ">=21",
     "fabric-api": "*"

@@ -1,7 +1,9 @@
 {
   "required": true,
   "package": "com.ji.afkcinematic.mixin",
+  "plugin": "com.ji.afkcinematic.mixin.JiAFKCinematicMixinPlugin",
   "compatibilityLevel": "JAVA_21",
+  "plugin": "com.ji.afkcinematic.mixin.JiAFKCinematicMixinPlugin",
   "mixins": [],
   "client": [
     "InGameHudMixin",
@@ -13,7 +15,8 @@
     "EntityRenderDispatcherMixin",
     "SoundSystemMixin",
     "MusicTrackerMixin",
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "WorldRendererCullingMixin"
   ],
   "injectors": {
     "defaultRequire": 1

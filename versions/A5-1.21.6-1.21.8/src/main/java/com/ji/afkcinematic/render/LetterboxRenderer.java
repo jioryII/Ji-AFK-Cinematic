@@ -13,18 +13,19 @@ public class LetterboxRenderer {
     private enum State {
         HIDDEN, FADING_IN, VISIBLE, FADING_OUT
     }
-    private static State letterboxState = State.HIDDEN;
-    private static float lastProgress = 0.0f;
-    private static float currentProgress = 0.0f;
+    private static volatile State letterboxState = State.HIDDEN;
+    private static volatile float lastProgress = 0.0f;
+    private static volatile float currentProgress = 0.0f;
 
     private static final float FADE_IN_TICKS = 60.0f; // 3 seconds
     private static final float FADE_OUT_TICKS = 8.0f; // 0.4 seconds
 
     public static void init() {
         // 1.21.11: RenderTickCounter has getTickProgress(boolean), not getTickDelta(boolean)
-        HudRenderCallback.EVENT.register((drawContext, renderTickCounter) ->
-            render(drawContext, renderTickCounter.getTickProgress(false))
-        );
+        HudRenderCallback.EVENT.register((drawContext, renderTickCounter) -> {
+            if (HUDController.isHidden()) return;
+            render(drawContext, renderTickCounter.getTickProgress(false));
+        });
     }
 
     public static void fadeIn() {

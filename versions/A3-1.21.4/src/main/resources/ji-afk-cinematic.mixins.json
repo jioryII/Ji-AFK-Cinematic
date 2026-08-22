@@ -1,6 +1,7 @@
 {
   "required": true,
   "package": "com.ji.afkcinematic.mixin",
+  "plugin": "com.ji.afkcinematic.mixin.JiAFKCinematicMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "client": [

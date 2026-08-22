@@ -5,8 +5,10 @@ import com.ji.afkcinematic.afk.AFKListener;
 import com.ji.afkcinematic.config.ConfigManager;
 import com.ji.afkcinematic.config.DamageAction;
 import com.ji.afkcinematic.config.ModConfig;
+import com.ji.afkcinematic.config.PersistentCinematicMode;
 import com.ji.afkcinematic.music.CinematicMusicManager;
 import com.ji.afkcinematic.render.CinematicHUDManager;
+import com.ji.afkcinematic.render.LetterboxRenderer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.GameMenuScreen;
@@ -37,10 +39,8 @@ public class CinematicManager implements AFKListener {
 
     @Override
     public void onActivityDetected() {
-        if (state == CinematicState.CINEMATIC_ACTIVE || state == CinematicState.AFK_DETECTED) {
+        if (state == CinematicState.CINEMATIC_ACTIVE) {
             deactivateCinematic();
-        } else if (state == CinematicState.COMPLETED) {
-            state = CinematicState.IDLE;
         }
     }
 
@@ -52,13 +52,7 @@ public class CinematicManager implements AFKListener {
     }
 
     public static void forceDeactivate() {
-        if (state != CinematicState.CINEMATIC_ACTIVE) {
-            com.ji.afkcinematic.music.CinematicMusicManager.forceStop();
-            reset();
-            return;
-        }
-        com.ji.afkcinematic.music.CinematicMusicManager.forceStop();
-        reset();
+        fullTeardown();
         com.ji.afkcinematic.afk.AFKDetector.setLockedOut(false);
     }
 
@@ -74,19 +68,30 @@ public class CinematicManager implements AFKListener {
     }
 
     private static void handleCinematicTick(MinecraftClient client) {
-        // Check for damage
-        if (client.player.hurtTime > 0) {
-            ModConfig config = ConfigManager.getConfig();
-            DamageAction dAction = config.damageAction;
-            if (dAction == DamageAction.CANCEL_CINEMATIC || dAction == DamageAction.PAUSE_GAME) {
-                deactivateCinematic();
-                AFKDetector.setLockedOut(true);
-                
-                if (dAction == DamageAction.PAUSE_GAME) {
-                    client.setScreen(new GameMenuScreen(true));
-                }
-                return;
+        // Death/respawn: force immediate teardown (player entity is being recreated).
+        // Yarn 1.21.x LivingEntity has no isDeadOrDying(); use deathTime + health.
+        if (client.player.deathTime > 0 || client.player.getHealth() <= 0.0F) {
+            fullTeardown();
+            AFKDetector.setLockedOut(true);
+            return;
+        }
+
+        ModConfig config = ConfigManager.getConfig();
+        CinematicHUDManager.updateChatVisibility(config);
+
+        // Direct damage respects the configured action. Predictive fall, fire and
+        // low-health cancellation were removed to keep the cinematic behavior explicit.
+        boolean tookDamage = client.player.hurtTime > 0;
+        boolean lockedMode = config.persistentMode == PersistentCinematicMode.PERSISTENT;
+        if (tookDamage && (lockedMode || config.damageAction != DamageAction.IGNORE)) {
+            DamageAction dAction = lockedMode ? DamageAction.CANCEL_CINEMATIC : config.damageAction;
+            deactivateCinematic();
+            AFKDetector.setLockedOut(true);
+
+            if (dAction == DamageAction.PAUSE_GAME) {
+                client.setScreen(new GameMenuScreen(true));
             }
+            return;
         }
 
         cinematicTicks++;
@@ -128,6 +133,7 @@ public class CinematicManager implements AFKListener {
         // Reset subsystems
         ShotRandomizer.reset();
         CameraController.reset();
+        CameraController.prepareSequence(config.characterShotPercentage);
         CameraController.startShot(0);
 
         // Activate managers
@@ -143,13 +149,31 @@ public class CinematicManager implements AFKListener {
         if (state != CinematicState.CINEMATIC_ACTIVE) return;
         
         CinematicMusicManager.stopMusic();
-        reset();
-    }
-
-    public static void reset() {
-        state = CinematicState.IDLE;
         CinematicHUDManager.deactivate();
         CinematicCameraManager.deactivate();
+        LetterboxRenderer.reset();
+        state = CinematicState.IDLE;
+    }
+
+    /**
+     * Immediate, unconditional teardown. Use on world-change / disconnect / death / shutdown
+     * paths where the tick loop cannot be relied on to finish fades. Restores the player's
+     * Music sound-category option to its original value (fixes the volume-locked-at-0 leak).
+     */
+    public static void fullTeardown() {
+        CinematicMusicManager.forceStop();
+        CinematicHUDManager.deactivate();
+        CinematicCameraManager.deactivate();
+        LetterboxRenderer.reset();
+        state = CinematicState.IDLE;
+    }
+
+    /**
+     * @deprecated alias kept for call-site compatibility; routes to {@link #fullTeardown()}.
+     */
+    @Deprecated
+    public static void reset() {
+        fullTeardown();
     }
 
     public static CinematicState getState() {

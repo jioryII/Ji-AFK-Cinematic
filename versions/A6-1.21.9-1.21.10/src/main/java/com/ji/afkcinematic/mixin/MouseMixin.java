@@ -1,10 +1,17 @@
 package com.ji.afkcinematic.mixin;
 
 import com.ji.afkcinematic.input.KeySequenceTracker;
+import com.ji.afkcinematic.input.CinematicInputPolicy;
 
 import com.ji.afkcinematic.afk.AFKDetector;
+import com.ji.afkcinematic.cinematic.CinematicManager;
+import com.ji.afkcinematic.cinematic.CinematicState;
+import com.ji.afkcinematic.config.ConfigManager;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.input.MouseInput;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,24 +27,29 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Mouse.class)
 public class MouseMixin {
 
-    private double lastX = 0;
-    private double lastY = 0;
-
     @Inject(method = "onCursorPos", at = @At("HEAD"), require = 0)
     private void onCursorMove(long window, double x, double y, CallbackInfo ci) {
-        AFKDetector.registerActivity();
-        lastX = x;
-        lastY = y;
+        registerMouseActivity(CinematicInputPolicy.Event.MOUSE_MOVE);
     }
 
     @Inject(method = "onMouseButton", at = @At("HEAD"), require = 0)
     private void onMouseClick(long window, MouseInput input, int action, CallbackInfo ci) {
-        AFKDetector.registerActivity();
+        if (action == GLFW.GLFW_PRESS) registerMouseActivity(CinematicInputPolicy.Event.MOUSE_CLICK);
         KeySequenceTracker.resetAll();
     }
 
     @Inject(method = "onMouseScroll", at = @At("HEAD"), require = 0)
     private void onMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
-        AFKDetector.registerActivity();
+        registerMouseActivity(CinematicInputPolicy.Event.MOUSE_SCROLL);
+    }
+
+    private void registerMouseActivity(CinematicInputPolicy.Event event) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        boolean chatOpen = client.currentScreen instanceof ChatScreen;
+        if (CinematicInputPolicy.shouldRegisterActivity(
+                CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE,
+                ConfigManager.getConfig().persistentMode, chatOpen, event)) {
+            AFKDetector.registerActivity();
+        }
     }
 }

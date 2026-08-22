@@ -29,5 +29,14 @@ public interface CameraShot {
      * @param tickDelta sub-tick interpolation
      */
     float updateYaw(float progress, float speedMultiplier, float tickDelta);
+
+    /** Optional Dutch angle in degrees. Positive values rotate the horizon clockwise. */
+    default float updateRoll(float progress, float speedMultiplier, float tickDelta) {
+        return 0.0f;
+    }
+
+    default String getId() {
+        return getClass().getSimpleName();
+    }
 }
 

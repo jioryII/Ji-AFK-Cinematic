@@ -15,19 +15,24 @@ public class LetterboxRenderer {
     private enum State {
         HIDDEN, FADING_IN, VISIBLE, FADING_OUT
     }
-    private static State letterboxState = State.HIDDEN;
-    private static float lastProgress = 0.0f;
-    private static float currentProgress = 0.0f;
+    // volatile: written from the client-tick thread, read from the render thread.
+    private static volatile State letterboxState = State.HIDDEN;
+    private static volatile float lastProgress = 0.0f;
+    private static volatile float currentProgress = 0.0f;
 
-    private static long lastTime = 0;
+    private static volatile long lastTime = 0;
 
     private static final float FADE_IN_MS = 3000.0f; // 3 seconds
     private static final float FADE_OUT_MS = 400.0f; // 0.4 seconds
 
     public static void init() {
-        HudElementRegistry.addLast(HUD_ID, (drawContext, deltaTracker) ->
-            render(drawContext, deltaTracker.getGameTimeDeltaPartialTick(true))
-        );
+        HudElementRegistry.addLast(HUD_ID, (drawContext, deltaTracker) -> {
+            // During a cinematic the HUD render is cancelled by InGameHudMixin, which
+            // draws the letterbox itself via renderFromHud(). Skip here to avoid drawing
+            // the bars twice per frame.
+            if (HUDController.isHidden()) return;
+            render(drawContext, deltaTracker.getGameTimeDeltaPartialTick(true));
+        });
     }
 
     public static void fadeIn() {

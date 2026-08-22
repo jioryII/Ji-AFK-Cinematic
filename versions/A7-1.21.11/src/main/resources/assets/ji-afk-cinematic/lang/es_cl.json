@@ -45,5 +45,21 @@
   "config.ji_afkcinematic.active": "§aActivo",
   "config.ji_afkcinematic.disabled": "§cDesactivado",
   "overlay.ji_afkcinematic.toggle.on": "Ji AFK Cinematic: activado",
-  "overlay.ji_afkcinematic.toggle.off": "Ji AFK Cinematic: desactivado"
+  "overlay.ji_afkcinematic.toggle.off": "Ji AFK Cinematic: desactivado",
+  "config.ji_afkcinematic.key_rejected_media": "§c⚠ Las teclas multimedia no se pueden asignar — elige otra tecla",
+  "config.ji_afkcinematic.key_rejected_driver": "§c⚠ Las teclas inyectadas por el controlador no se pueden asignar",
+  "config.ji_afkcinematic.keybind_disabled_label": "§7Desactivado",
+  "config.ji_afkcinematic.tooltip.modifier_hint": "§7Ctrl/Shift/Alt funcionan en ambos lados del teclado.",
+  "config.ji_afkcinematic.shot_mix": "P %s%% · A %s%%",
+  "config.ji_afkcinematic.tooltip.shot_mix": "Distribución de tomas entre personaje y ambiente.",
+  "config.ji_afkcinematic.persistent_cinematics": "Cinemática persistente",
+  "config.ji_afkcinematic.tooltip.persistent_cinematics": "Define qué interacciones pueden interrumpir la cinemática.",
+  "config.ji_afkcinematic.camera_rotation": "Rotación de cámara",
+  "config.ji_afkcinematic.tooltip.camera_rotation": "Aplica una inclinación fija y sutil a algunas tomas.",
+  "config.ji_afkcinematic.persistent_mode.normal": "Normal",
+  "config.ji_afkcinematic.persistent_mode.interactive": "Interactivo",
+  "config.ji_afkcinematic.persistent_mode.persistent": "Persistente",
+  "config.ji_afkcinematic.disable_keybind": "§c✕ Desactivar",
+  "config.ji_afkcinematic.rebind_keybind": "§a↺ Reasignar",
+  "config.ji_afkcinematic.tooltip.disable_keybind": "Elimina este atajo por completo. Pulsa ↺ Reasignar para configurar uno nuevo."
 }

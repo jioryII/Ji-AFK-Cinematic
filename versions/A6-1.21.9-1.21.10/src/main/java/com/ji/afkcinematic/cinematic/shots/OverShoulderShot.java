@@ -1,11 +1,7 @@
 package com.ji.afkcinematic.cinematic.shots;
 
 import com.ji.afkcinematic.cinematic.AbstractCameraShot;
-
-
-import com.ji.afkcinematic.cinematic.CameraShot;
 import com.ji.afkcinematic.cinematic.ShotRandomizer;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.Vec3d;
 
 /**

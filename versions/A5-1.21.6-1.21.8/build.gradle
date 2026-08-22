@@ -29,6 +29,11 @@ dependencies {
 
 	// ModMenu — optional integration for config screen
 	modCompileOnly "com.terraformersmc:modmenu:14.0.0-beta.1"
+
+	// Tests (v2.2.2 hardening)
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
 }
 
 processResources {
@@ -41,6 +46,10 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 21
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
 }
 
 java {
