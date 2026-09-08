@@ -31,7 +31,12 @@ public abstract class CameraMixin {
     @Shadow
     protected abstract void setRotation(float yaw, float pitch);
 
-    @Inject(method = "update", at = @At("TAIL"), require = 0)
+    @Inject(method = "update", at = @At("HEAD"), order = 500, require = 0)
+    private void beforeCameraUpdate(net.minecraft.world.World area, net.minecraft.entity.Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
+        com.ji.afkcinematic.compat.SmoothF5Compatibility.onCameraUpdate(this);
+    }
+
+    @Inject(method = "update", at = @At("TAIL"), order = 2000, require = 0)
     private void onCameraUpdate(net.minecraft.world.World area, net.minecraft.entity.Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
         CinematicState state = CinematicManager.getState();
         if (state == CinematicState.CINEMATIC_ACTIVE) {

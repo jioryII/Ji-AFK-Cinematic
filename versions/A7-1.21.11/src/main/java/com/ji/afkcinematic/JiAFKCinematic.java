@@ -25,9 +25,10 @@ public class JiAFKCinematic implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("Initializing {} v2.3.0", MOD_NAME);
+        LOGGER.info("Initializing {} v2.3.1", MOD_NAME);
         ConfigManager.loadConfig();
 
+        com.ji.afkcinematic.input.GameplayActivityMonitor.init();
         AFKDetector.init();
         CinematicManager.init();
         CinematicMusicManager.init();

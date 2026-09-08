@@ -27,7 +27,14 @@ public class JiAFKCinematicMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return true; // apply all declared mixins
+        String version = net.fabricmc.loader.api.FabricLoader.getInstance()
+                .getModContainer("minecraft")
+                .map(container -> container.getMetadata().getVersion().getFriendlyString())
+                .orElse("");
+        boolean is262 = version.startsWith("26.2");
+        if (mixinClassName.endsWith("Hud262Mixin")) return is262;
+        if (mixinClassName.endsWith("InGameHudMixin")) return !is262;
+        return true;
     }
 
     @Override

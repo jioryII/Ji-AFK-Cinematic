@@ -12,6 +12,7 @@
     "KeyboardMixin",
     "PlayerNameRendererMixin",
     "CameraMixin",
+    "ClientPlayerMovementMixin",
     "EntityRenderDispatcherMixin",
     "EntityVisibilityMixin",
     "SoundSystemMixin",

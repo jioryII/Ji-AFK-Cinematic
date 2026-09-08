@@ -56,8 +56,25 @@ public class CinematicManager implements AFKListener {
         com.ji.afkcinematic.afk.AFKDetector.setLockedOut(false);
     }
 
+    /** Starts immediately or returns to the saved first-person view. */
+    public static void toggleImmediate() {
+        if (state == CinematicState.CINEMATIC_ACTIVE) {
+            forceDeactivate();
+            return;
+        }
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null && client.world != null) {
+            AFKDetector.setLockedOut(false);
+            onAFKDetected();
+        }
+    }
+
     private static void tick() {
         MinecraftClient client = MinecraftClient.getInstance();
+        if (state == CinematicState.CINEMATIC_ACTIVE && client.currentScreen instanceof GameMenuScreen) {
+            forceDeactivate();
+            return;
+        }
         if (client.player == null || client.world == null || client.isPaused()) {
             return;
         }
@@ -77,8 +94,6 @@ public class CinematicManager implements AFKListener {
         }
 
         ModConfig config = ConfigManager.getConfig();
-        CinematicHUDManager.updateChatVisibility(config);
-
         // Direct damage respects the configured action. Predictive fall, fire and
         // low-health cancellation were removed to keep the cinematic behavior explicit.
         boolean tookDamage = client.player.hurtTime > 0;
@@ -109,7 +124,8 @@ public class CinematicManager implements AFKListener {
 
         if (currentShotIndex == 0 && cinematicTicks > 0) {
             currentCycle++;
-            if (currentCycle >= ConfigManager.getConfig().maxCycles) {
+            ModConfig config = ConfigManager.getConfig();
+            if (!config.isUnlimitedCycles() && currentCycle >= config.maxCycles) {
                 deactivateCinematic();
                 AFKDetector.setLockedOut(true);
                 return;
@@ -121,6 +137,7 @@ public class CinematicManager implements AFKListener {
     }
 
     public static void onAFKDetected() {
+        if (state == CinematicState.CINEMATIC_ACTIVE) return;
         ModConfig config = ConfigManager.getConfig();
         state = CinematicState.CINEMATIC_ACTIVE;
         

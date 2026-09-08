@@ -1,8 +1,6 @@
 package com.ji.afkcinematic.render;
 
 import com.ji.afkcinematic.config.ModConfig;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.ChatScreen;
 
 /**
  * Specialized manager for HUD visibility and letterbox effects (Mojmap 26.x).
@@ -23,14 +21,8 @@ public class CinematicHUDManager {
         HUDController.setHidden(false);
     }
 
-    public static void updateChatVisibility(ModConfig config) {
-        // 26.x does not expose options.hideGui; InGameHudMixin consults the
-        // current screen directly, so no mutable option is required here.
-    }
-
-    public static boolean isPersistentChatOpen(ModConfig config) {
-        return config.persistentMode != com.ji.afkcinematic.config.PersistentCinematicMode.NORMAL
-                && com.ji.afkcinematic.ScreenHelper.getCurrentScreen(Minecraft.getInstance()) instanceof ChatScreen;
+    public static boolean shouldRenderPassiveChat(ModConfig config) {
+        return config.chatVisibility != null && config.chatVisibility.isVisible(config.persistentMode);
     }
 
     public static void forceRestore() {

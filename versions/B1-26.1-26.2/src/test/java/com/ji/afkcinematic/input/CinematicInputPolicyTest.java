@@ -12,13 +12,13 @@ class CinematicInputPolicyTest {
                 true, false, PersistentCinematicMode.NORMAL));
         assertTrue(CinematicInputPolicy.shouldProcessModShortcuts(
                 false, false, PersistentCinematicMode.NORMAL));
-        assertFalse(CinematicInputPolicy.shouldProcessModShortcuts(
+        assertTrue(CinematicInputPolicy.shouldProcessModShortcuts(
                 false, true, PersistentCinematicMode.PERSISTENT));
     }
 
     @Test
-    void classicModeTreatsEveryInputAsActivity() {
-        for (CinematicInputPolicy.Event event : CinematicInputPolicy.Event.values()) {
+    void classicModeTreatsEveryGameplayInputAsActivity() {
+        for (CinematicInputPolicy.Event event : new CinematicInputPolicy.Event[]{LOOK, MOVE, JUMP_SNEAK, GAMEPLAY_ACTION, ESCAPE}) {
             assertTrue(CinematicInputPolicy.shouldRegisterActivity(
                     true, PersistentCinematicMode.NORMAL, false, event));
         }
@@ -26,42 +26,41 @@ class CinematicInputPolicyTest {
 
     @Test
     void persistentModeIgnoresPassiveMouseAndChatOpening() {
-        assertFalse(activity(true, PersistentCinematicMode.INTERACTIVE, false, MOUSE_MOVE));
-        assertFalse(activity(true, PersistentCinematicMode.INTERACTIVE, false, OPEN_CHAT_KEY));
-        assertFalse(activity(false, PersistentCinematicMode.INTERACTIVE, false, OPEN_CHAT_KEY));
+        assertFalse(activity(true, PersistentCinematicMode.INTERACTIVE, false, LOOK));
+        assertFalse(activity(true, PersistentCinematicMode.INTERACTIVE, false, CHAT_OPEN));
+        assertFalse(activity(false, PersistentCinematicMode.INTERACTIVE, false, CHAT_OPEN));
     }
 
     @Test
     void persistentModeLetsIdleThresholdExpireWhileChatIsInUse() {
         for (boolean cinematicActive : new boolean[]{false, true}) {
-            assertFalse(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, KEY_PRESS));
-            assertFalse(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, OPEN_CHAT_KEY));
-            assertFalse(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, MOUSE_MOVE));
-            assertFalse(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, MOUSE_CLICK));
-            assertFalse(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, MOUSE_SCROLL));
-            assertTrue(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, ESCAPE_KEY));
+            assertFalse(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, CHAT_INPUT));
+            assertFalse(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, CHAT_OPEN));
+            assertFalse(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, LOOK));
+            assertFalse(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, GAMEPLAY_ACTION));
+            assertTrue(activity(cinematicActive, PersistentCinematicMode.INTERACTIVE, true, ESCAPE));
         }
     }
 
     @Test
     void gameplayInputStillResetsIdleThresholdBeforeCinematicStarts() {
-        assertTrue(activity(false, PersistentCinematicMode.INTERACTIVE, false, KEY_PRESS));
-        assertTrue(activity(false, PersistentCinematicMode.INTERACTIVE, false, MOUSE_MOVE));
-        assertTrue(activity(false, PersistentCinematicMode.INTERACTIVE, false, MOUSE_CLICK));
-        assertTrue(activity(false, PersistentCinematicMode.INTERACTIVE, false, MOUSE_SCROLL));
+        assertTrue(activity(false, PersistentCinematicMode.INTERACTIVE, false, LOOK));
+        assertTrue(activity(false, PersistentCinematicMode.INTERACTIVE, false, MOVE));
+        assertTrue(activity(false, PersistentCinematicMode.INTERACTIVE, false, JUMP_SNEAK));
+        assertTrue(activity(false, PersistentCinematicMode.INTERACTIVE, false, GAMEPLAY_ACTION));
     }
 
     @Test
     void gameplayInputOutsideChatStillCancels() {
-        assertTrue(activity(true, PersistentCinematicMode.INTERACTIVE, false, KEY_PRESS));
-        assertTrue(activity(true, PersistentCinematicMode.INTERACTIVE, false, MOUSE_CLICK));
-        assertTrue(activity(true, PersistentCinematicMode.INTERACTIVE, false, MOUSE_SCROLL));
+        assertTrue(activity(true, PersistentCinematicMode.INTERACTIVE, false, MOVE));
+        assertTrue(activity(true, PersistentCinematicMode.INTERACTIVE, false, JUMP_SNEAK));
+        assertTrue(activity(true, PersistentCinematicMode.INTERACTIVE, false, GAMEPLAY_ACTION));
     }
 
     @Test
     void lockedModeOnlyLetsEscapeRegisterAsInputActivity() {
         for (CinematicInputPolicy.Event event : CinematicInputPolicy.Event.values()) {
-            assertEquals(event == ESCAPE_KEY,
+            assertEquals(event == ESCAPE,
                     activity(true, PersistentCinematicMode.PERSISTENT, false, event));
         }
     }

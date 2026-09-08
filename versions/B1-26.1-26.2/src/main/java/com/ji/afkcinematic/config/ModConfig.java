@@ -5,7 +5,8 @@ import com.ji.afkcinematic.input.KeySequenceTracker;
 public class ModConfig {
     // Schema version for forward migration. Bump when a breaking field change happens;
     // add migration logic in ConfigManager.loadConfig().
-    public static final int CURRENT_CONFIG_VERSION = 5;
+    public static final int CURRENT_CONFIG_VERSION = 8;
+    public static final int UNLIMITED_CYCLES = -1;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // Cinematic timing
@@ -35,15 +36,20 @@ public class ModConfig {
     public boolean extendedMusic = true;
     public boolean modEnabled = true;
     public boolean enableLetterbox = true;
+    public CinematicChatVisibility chatVisibility = CinematicChatVisibility.VISIBLE;
 
     // Audio
     public boolean enableMusic = true;
+    public MusicMode musicMode = MusicMode.VANILLA;
+    @Deprecated public transient boolean thirdPartyMusic = false;
 
     // Keybind (GLFW key code, F7 = 296)
     public int menuKey1 = 296;
     public int menuKey2 = 72;
     public int toggleKey1 = 341;
     public int toggleKey2 = 72;
+    public int immediateKey1 = 296;
+    public int immediateKey2 = 73;
     public float cinematicMusicVolume = 0.5f;
 
     // Derived helpers (not serialized, transient)
@@ -54,11 +60,13 @@ public class ModConfig {
         // Clamp values to valid ranges
         shotDurationSeconds = clamp(shotDurationSeconds, 5, 60);
         afkThresholdSeconds = clamp(afkThresholdSeconds, 10, 600);
-        maxCycles = clamp(maxCycles, 1, 20);
+        if (maxCycles != UNLIMITED_CYCLES) maxCycles = clamp(maxCycles, 1, 20);
         cameraSpeed = clampFloat(cameraSpeed, 0.1f, 3.0f);
         useEasing = false;
         easingIntensity = 0.0f;
         if (persistentMode == null) persistentMode = PersistentCinematicMode.NORMAL;
+        if (chatVisibility == null) chatVisibility = CinematicChatVisibility.VISIBLE;
+        if (musicMode == null) musicMode = MusicMode.VANILLA;
         characterShotPercentage = Math.round(clamp(characterShotPercentage, 0, 100) / 10.0f) * 10;
         cancelOnFallDamage = false;
         cancelOnFire = false;
@@ -71,6 +79,8 @@ public class ModConfig {
         menuKey2 = clamp(menuKey2, -1, 65535);
         toggleKey1 = clamp(toggleKey1, -1, 65535);
         toggleKey2 = clamp(toggleKey2, -1, 65535);
+        immediateKey1 = clamp(immediateKey1, -1, 65535);
+        immediateKey2 = clamp(immediateKey2, -1, 65535);
         // If the menu and toggle sequences are identical the tracker can't tell them
         // apart; fall back to the built-in defaults and warn so the user notices.
         if (menuKey1 == toggleKey1 && menuKey2 == toggleKey2
@@ -99,10 +109,22 @@ public class ModConfig {
                 && (!KeySequenceTracker.isBindableKeyCode(toggleKey1)
                     || !KeySequenceTracker.isBindableKeyCode(toggleKey2))) {
             com.ji.afkcinematic.JiAFKCinematic.LOGGER.warn(
-                "Invalid toggle shortcut ({}, {}); resetting to Left Ctrl + H", toggleKey1, toggleKey2);
+                "Invalid toggle shortcut ({}, {}); resetting to Ctrl + H", toggleKey1, toggleKey2);
             toggleKey1 = 341;
             toggleKey2 = 72;
         }
+        if (!isDisabledShortcut(immediateKey1, immediateKey2)
+                && (!KeySequenceTracker.isBindableKeyCode(immediateKey1)
+                    || !KeySequenceTracker.isBindableKeyCode(immediateKey2))) {
+            com.ji.afkcinematic.JiAFKCinematic.LOGGER.warn(
+                "Invalid immediate shortcut ({}, {}); resetting to F7 + I", immediateKey1, immediateKey2);
+            immediateKey1 = 296;
+            immediateKey2 = 73;
+        }
+    }
+
+    public boolean isUnlimitedCycles() {
+        return maxCycles == UNLIMITED_CYCLES;
     }
 
     private static boolean isDisabledShortcut(int firstKey, int secondKey) {

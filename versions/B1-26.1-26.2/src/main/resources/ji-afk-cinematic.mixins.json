@@ -6,7 +6,9 @@
   "mixins": [],
   "client": [
     "CameraMixin",
+    "ClientPlayerMovementMixin",
     "InGameHudMixin",
+    "Hud262Mixin",
     "GameRendererMixin",
     "LevelRendererMixin",
     "MinecraftClientMixin",

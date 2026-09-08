@@ -2,7 +2,6 @@ package com.ji.afkcinematic.render;
 
 import com.ji.afkcinematic.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ChatScreen;
 
 public class CinematicHUDManager {
     private static boolean captured = false;
@@ -32,17 +31,8 @@ public class CinematicHUDManager {
         }
     }
 
-    public static void updateChatVisibility(ModConfig config) {
-        if (!captured) return;
-        MinecraftClient client = MinecraftClient.getInstance();
-        // Chat must remain visible even if the player entered AFK with F1/HUD hidden.
-        // The original preference is still restored verbatim on teardown.
-        client.options.hudHidden = !isPersistentChatOpen(config);
-    }
-
-    public static boolean isPersistentChatOpen(ModConfig config) {
-        return config.persistentMode != com.ji.afkcinematic.config.PersistentCinematicMode.NORMAL
-                && MinecraftClient.getInstance().currentScreen instanceof ChatScreen;
+    public static boolean shouldRenderPassiveChat(ModConfig config) {
+        return config.chatVisibility != null && config.chatVisibility.isVisible(config.persistentMode);
     }
 
     public static void forceRestore() {

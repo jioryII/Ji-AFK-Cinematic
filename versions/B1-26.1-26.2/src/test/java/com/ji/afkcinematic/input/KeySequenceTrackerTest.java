@@ -39,6 +39,19 @@ class KeySequenceTrackerTest {
     }
 
     @Test
+    void menuToggleAndImmediateChordsKeepIndependentState() {
+        int[] menu = KeySequenceTracker.acceptedFirstKeys(GLFW.GLFW_KEY_F7);
+        int[] toggle = KeySequenceTracker.acceptedFirstKeys(GLFW.GLFW_KEY_LEFT_CONTROL);
+        int[] immediate = KeySequenceTracker.acceptedFirstKeys(GLFW.GLFW_KEY_F7);
+
+        assertFalse(KeySequenceTracker.checkMenu(GLFW.GLFW_KEY_F7, menu, GLFW.GLFW_KEY_H));
+        assertFalse(KeySequenceTracker.checkImmediate(GLFW.GLFW_KEY_F7, immediate, GLFW.GLFW_KEY_I));
+        assertFalse(KeySequenceTracker.checkToggle(GLFW.GLFW_KEY_LEFT_CONTROL, toggle, GLFW.GLFW_KEY_H));
+        assertTrue(KeySequenceTracker.checkToggle(GLFW.GLFW_KEY_H, toggle, GLFW.GLFW_KEY_H));
+        assertTrue(KeySequenceTracker.checkImmediate(GLFW.GLFW_KEY_I, immediate, GLFW.GLFW_KEY_I));
+    }
+
+    @Test
     void releasingFirstKeyCancelsChord() {
         int[] first = KeySequenceTracker.acceptedFirstKeys(GLFW.GLFW_KEY_F7);
         assertFalse(KeySequenceTracker.checkMenu(GLFW.GLFW_KEY_F7, first, GLFW.GLFW_KEY_H));

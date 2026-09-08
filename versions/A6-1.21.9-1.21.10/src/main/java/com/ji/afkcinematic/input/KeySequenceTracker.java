@@ -26,6 +26,8 @@ public final class KeySequenceTracker {
     private static long menuFirstKeyTime = 0L;
     private static int toggleFirstKey = -1;
     private static long toggleFirstKeyTime = 0L;
+    private static int immediateFirstKey = -1;
+    private static long immediateFirstKeyTime = 0L;
 
     // === Estado rebind (single, solo se rebinda una secuencia a la vez) ===
     private static int rebindFirstKey = -1;
@@ -77,6 +79,26 @@ public final class KeySequenceTracker {
         return check(keyCode, acceptedFirstKeys, secondKey, false);
     }
 
+    /** Secuencia de inicio/final inmediato (default: F7 + I). */
+    public static boolean checkImmediate(int keyCode, int[] acceptedFirstKeys, int secondKey) {
+        return checkImmediateInternal(keyCode, acceptedFirstKeys, secondKey);
+    }
+
+    /** True only for a valid step of the configured immediate-cinematic shortcut. */
+    public static boolean isToggleSequenceStep(int keyCode, int configuredFirst, int secondKey) {
+        int[] firstKeys = acceptedFirstKeys(configuredFirst);
+        if (toggleFirstKey == -1) return matchesAny(keyCode, firstKeys);
+        if (System.currentTimeMillis() - toggleFirstKeyTime > SEQUENCE_TIMEOUT_MS) return false;
+        return keyCode == secondKey;
+    }
+
+    public static boolean isImmediateSequenceStep(int keyCode, int configuredFirst, int secondKey) {
+        int[] firstKeys = acceptedFirstKeys(configuredFirst);
+        if (immediateFirstKey == -1) return matchesAny(keyCode, firstKeys);
+        if (System.currentTimeMillis() - immediateFirstKeyTime > SEQUENCE_TIMEOUT_MS) return false;
+        return keyCode == secondKey;
+    }
+
     /**
      * Cancela una combinacion cuando se suelta su primera tecla. Esto convierte
      * los atajos en chords reales y evita que una tecla Fn/media mapeada a F7
@@ -89,6 +111,40 @@ public final class KeySequenceTracker {
         }
         if (menuFirstKey == keyCode) resetSequence(true);
         if (toggleFirstKey == keyCode) resetSequence(false);
+        if (immediateFirstKey == keyCode) resetImmediateSequence();
+    }
+
+    private static boolean checkImmediateInternal(int keyCode, int[] acceptedFirstKeys, int secondKey) {
+        long now = System.currentTimeMillis();
+        if (acceptedFirstKeys.length == 1 && acceptedFirstKeys[0] == secondKey) {
+            if (keyCode == secondKey) { resetImmediateSequence(); return true; }
+            return false;
+        }
+        if (immediateFirstKey == -1) {
+            if (matchesAny(keyCode, acceptedFirstKeys)) {
+                immediateFirstKey = keyCode;
+                immediateFirstKeyTime = now;
+            }
+            return false;
+        }
+        if (now - immediateFirstKeyTime > SEQUENCE_TIMEOUT_MS) {
+            resetImmediateSequence();
+            if (matchesAny(keyCode, acceptedFirstKeys)) {
+                immediateFirstKey = keyCode;
+                immediateFirstKeyTime = now;
+            }
+            return false;
+        }
+        if (keyCode == secondKey && matchesAny(immediateFirstKey, acceptedFirstKeys)) {
+            resetImmediateSequence();
+            return true;
+        }
+        resetImmediateSequence();
+        if (matchesAny(keyCode, acceptedFirstKeys)) {
+            immediateFirstKey = keyCode;
+            immediateFirstKeyTime = now;
+        }
+        return false;
     }
 
     private static boolean check(int keyCode, int[] acceptedFirstKeys, int secondKey, boolean isMenu) {
@@ -152,6 +208,12 @@ public final class KeySequenceTracker {
     public static void resetAll() {
         menuFirstKey = -1; menuFirstKeyTime = 0L;
         toggleFirstKey = -1; toggleFirstKeyTime = 0L;
+        immediateFirstKey = -1; immediateFirstKeyTime = 0L;
+    }
+
+    public static void resetImmediateSequence() {
+        immediateFirstKey = -1;
+        immediateFirstKeyTime = 0L;
     }
 
     // === Rebind UI (separado del runtime) ===

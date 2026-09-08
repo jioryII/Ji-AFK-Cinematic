@@ -20,6 +20,7 @@ public class CinematicMusicManager {
     private static float originalMusicVolume = -1.0f;
     private static float currentFade = 1.0f;
     private static final float FADE_SPEED = 0.01f;
+    private static int missingTrackRetryTicks;
 
     private static final List<Object> trackPool = new ArrayList<>();
     private static final BalancedShuffleBag<Object> shuffleBag = new BalancedShuffleBag<>();
@@ -31,15 +32,24 @@ public class CinematicMusicManager {
     private static boolean reflectionResolved = false;
 
     public static void init() {
+        LocalMusicPackManager.initialize();
+        ThirdPartyMusicRegistry.init();
         ClientTickEvents.END_CLIENT_TICK.register(client -> tick(Minecraft.getInstance()));
     }
 
     public static void checkAndPlayMusic() {
-        if (isOurMusicPlaying) return;
+        Minecraft client = Minecraft.getInstance();
+        if (isOurMusicPlaying) {
+            retryMissingTrack(client);
+            return;
+        }
         state = FadeState.FADE_OUT_GAME;
-        originalMusicVolume = getMusicOptionVolume(Minecraft.getInstance());
+        originalMusicVolume = getMusicOptionVolume(client);
         currentFade = 1.0f;
         isOurMusicPlaying = true;
+        missingTrackRetryTicks = 0;
+        playCinematicMusicSafe(client);
+        missingTrackRetryTicks = 20;
     }
 
     public static void stopMusic() {
@@ -49,6 +59,7 @@ public class CinematicMusicManager {
                 currentInstance.fadeOutAndStop();
             } else {
                 isOurMusicPlaying = false;
+                currentInstance = null;
                 state = FadeState.IDLE;
                 if (originalMusicVolume != -1.0f) {
                     setMusicOptionVolume(Minecraft.getInstance(), originalMusicVolume);
@@ -64,6 +75,7 @@ public class CinematicMusicManager {
             currentInstance = null;
         }
         isOurMusicPlaying = false;
+        missingTrackRetryTicks = 0;
         state = FadeState.IDLE;
         if (originalMusicVolume != -1.0f) {
             setMusicOptionVolume(Minecraft.getInstance(), originalMusicVolume);
@@ -72,12 +84,12 @@ public class CinematicMusicManager {
     }
 
     private static void tick(Minecraft client) {
+        if (missingTrackRetryTicks > 0) missingTrackRetryTicks--;
+        if (isOurMusicPlaying && state != FadeState.FADE_OUT_CINEMATIC) {
+            retryMissingTrack(client);
+        }
+
         if (state == FadeState.IDLE) {
-            if (isOurMusicPlaying && currentInstance != null) {
-                if (currentInstance.isStopped() || (client.getSoundManager() != null && !client.getSoundManager().isActive(currentInstance))) {
-                    playCinematicMusicSafe(client);
-                }
-            }
             return;
         }
 
@@ -87,7 +99,6 @@ public class CinematicMusicManager {
                 currentFade = 0.0f;
                 setMusicOptionVolume(client, 0.0f);
                 stopVanillaMusic(client);
-                playCinematicMusicSafe(client);
                 state = FadeState.FADE_IN_CINEMATIC;
             } else {
                 setMusicOptionVolume(client, originalMusicVolume * currentFade);
@@ -107,6 +118,7 @@ public class CinematicMusicManager {
                 }
                 state = FadeState.IDLE;
                 isOurMusicPlaying = false;
+                currentInstance = null;
             }
         }
     }
@@ -191,13 +203,18 @@ public class CinematicMusicManager {
 
     private static void fillShuffleBag() {
         trackPool.clear();
-        addTrackSafe(() -> SoundEvents.MUSIC_GAME);
-        addTrackSafe(() -> SoundEvents.MUSIC_CREATIVE);
-        addTrackSafe(() -> SoundEvents.MUSIC_MENU);
-        addTrackSafe(() -> SoundEvents.MUSIC_END);
-        addTrackSafe(() -> SoundEvents.MUSIC_CREDITS);
+        com.ji.afkcinematic.config.ModConfig config = com.ji.afkcinematic.config.ConfigManager.getConfig();
+        com.ji.afkcinematic.config.MusicMode mode = config.musicMode;
+
+        if (mode.includesVanilla()) {
+            addTrackSafe(() -> SoundEvents.MUSIC_GAME);
+            addTrackSafe(() -> SoundEvents.MUSIC_CREATIVE);
+            addTrackSafe(() -> SoundEvents.MUSIC_MENU);
+            addTrackSafe(() -> SoundEvents.MUSIC_END);
+            addTrackSafe(() -> SoundEvents.MUSIC_CREDITS);
+        }
         
-        if (com.ji.afkcinematic.config.ConfigManager.getConfig().extendedMusic) {
+        if (mode.includesVanilla() && config.extendedMusic) {
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_CAT);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_BLOCKS);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_CHIRP);
@@ -215,7 +232,13 @@ public class CinematicMusicManager {
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_CREATOR_MUSIC_BOX);
             addTrackSafe(() -> SoundEvents.MUSIC_DISC_PRECIPICE);
         }
-        
+
+        if (mode.includesCustom()) {
+            for (net.minecraft.sounds.SoundEvent track : ThirdPartyMusicRegistry.getTracks()) {
+                addTrackSafe(() -> track);
+            }
+        }
+
         shuffleBag.replace(trackPool);
     }
 
@@ -240,6 +263,28 @@ public class CinematicMusicManager {
             fillShuffleBag();
         }
         return shuffleBag.next();
+    }
+
+    static void onThirdPartyMusicReloaded() {
+        shuffleBag.replace(List.of());
+        missingTrackRetryTicks = 0;
+    }
+
+    static void onResourcesReloaded() {
+        onThirdPartyMusicReloaded();
+        if (isOurMusicPlaying) {
+            if (currentInstance != null) currentInstance.forceStop();
+            currentInstance = null;
+        }
+    }
+
+    private static void retryMissingTrack(Minecraft client) {
+        boolean missing = currentInstance == null || currentInstance.isStopped()
+                || (client.getSoundManager() != null && !client.getSoundManager().isActive(currentInstance));
+        if (missing && missingTrackRetryTicks <= 0) {
+            playCinematicMusicSafe(client);
+            missingTrackRetryTicks = 20;
+        }
     }
 
     private static void playCinematicMusicSafe(Minecraft client) {

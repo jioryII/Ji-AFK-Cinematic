@@ -55,10 +55,10 @@ public final class RuntimeProbe {
             check(characterShots == 4 || characterShots == 5, "30% mix did not select 4-5 character shots");
             check(CameraController.getActiveEnvironmentShotCount() == 15 - characterShots,
                     "environment mix did not complement character shots");
-            check(!activity(true, CinematicInputPolicy.Event.OPEN_CHAT_KEY), "chat key incorrectly cancels persistent cinematic");
-            check(!activity(false, CinematicInputPolicy.Event.MOUSE_MOVE), "mouse movement incorrectly cancels persistent cinematic");
-            check(!activity(true, CinematicInputPolicy.Event.MOUSE_CLICK), "chat click incorrectly cancels persistent cinematic");
-            check(activity(false, CinematicInputPolicy.Event.ESCAPE_KEY), "escape does not cancel persistent cinematic");
+            check(!activity(true, CinematicInputPolicy.Event.CHAT_OPEN), "chat key incorrectly cancels persistent cinematic");
+            check(!activity(false, CinematicInputPolicy.Event.LOOK), "mouse movement incorrectly cancels persistent cinematic");
+            check(!activity(true, CinematicInputPolicy.Event.CHAT_INPUT), "chat click incorrectly cancels persistent cinematic");
+            check(activity(false, CinematicInputPolicy.Event.ESCAPE), "escape does not cancel persistent cinematic");
             ScreenHelper.setScreen(client, new ChatScreen("", false));
             phase = 1;
             return;

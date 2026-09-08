@@ -7,6 +7,7 @@ import com.ji.afkcinematic.afk.AFKDetector;
 import com.ji.afkcinematic.cinematic.CinematicManager;
 import com.ji.afkcinematic.cinematic.CinematicState;
 import com.ji.afkcinematic.config.ConfigManager;
+import com.ji.afkcinematic.config.ConfigScreen;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -29,18 +30,22 @@ public class MouseMixin {
 
     @Inject(method = "onCursorPos", at = @At("HEAD"), require = 0)
     private void onCursorMove(long window, double x, double y, CallbackInfo ci) {
-        registerMouseActivity(CinematicInputPolicy.Event.MOUSE_MOVE);
+        registerMouseActivity(CinematicInputPolicy.Event.LOOK);
     }
 
     @Inject(method = "onMouseButton", at = @At("HEAD"), require = 0)
     private void onMouseClick(long window, MouseInput input, int action, CallbackInfo ci) {
-        if (action == GLFW.GLFW_PRESS) registerMouseActivity(CinematicInputPolicy.Event.MOUSE_CLICK);
+        if (action == GLFW.GLFW_PRESS) registerMouseActivity(CinematicInputPolicy.Event.GAMEPLAY_ACTION);
         KeySequenceTracker.resetAll();
     }
 
     @Inject(method = "onMouseScroll", at = @At("HEAD"), require = 0)
     private void onMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
-        registerMouseActivity(CinematicInputPolicy.Event.MOUSE_SCROLL);
+        if (MinecraftClient.getInstance().currentScreen instanceof ConfigScreen screen) {
+            screen.scrollContent(vertical);
+            return;
+        }
+        registerMouseActivity(CinematicInputPolicy.Event.GAMEPLAY_ACTION);
     }
 
     private void registerMouseActivity(CinematicInputPolicy.Event event) {

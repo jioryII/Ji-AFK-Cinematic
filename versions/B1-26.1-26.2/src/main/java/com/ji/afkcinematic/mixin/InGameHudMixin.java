@@ -2,14 +2,16 @@ package com.ji.afkcinematic.mixin;
 
 import com.ji.afkcinematic.render.HUDController;
 import com.ji.afkcinematic.render.LetterboxRenderer;
+import com.ji.afkcinematic.render.CinematicHUDManager;
+import com.ji.afkcinematic.config.ConfigManager;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 /**
  * Hides the in-game HUD orchestrator during a cinematic (hotbar, crosshair,
@@ -27,9 +29,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * from {@code GameRenderer.gameRenderState.guiRenderState}.
  */
 @Mixin(Gui.class)
-public class InGameHudMixin {
-
-    private static java.lang.reflect.Field cachedGameRenderStateField = null;
+public abstract class InGameHudMixin {
+    @Invoker("extractChat")
+    protected abstract void jiAfk$extractChat(GuiGraphicsExtractor context, DeltaTracker deltaTracker);
 
     @Inject(
         method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V",
@@ -38,53 +40,13 @@ public class InGameHudMixin {
         require = 0
     )
     private void jiAfk$hideHudDuringCinematic(GuiGraphicsExtractor context, DeltaTracker deltaTracker, CallbackInfo ci) {
-        Minecraft mc = Minecraft.getInstance();
-        if (com.ji.afkcinematic.ScreenHelper.getCurrentScreen(mc) != null) return;
         if (HUDController.isHidden()) {
             LetterboxRenderer.renderFromHud(context, deltaTracker.getGameTimeDeltaPartialTick(true));
-            ci.cancel();
-        }
-    }
-
-    @Inject(
-        method = "extractRenderState(Lnet/minecraft/client/DeltaTracker;ZZ)V",
-        at = @At("HEAD"),
-        cancellable = true,
-        require = 0
-    )
-    private void jiAfk$hideHudDuringCinematic262(DeltaTracker deltaTracker, boolean renderCrosshair, boolean renderChat, CallbackInfo ci) {
-        Minecraft mc = Minecraft.getInstance();
-        if (com.ji.afkcinematic.ScreenHelper.getCurrentScreen(mc) != null) return;
-        if (HUDController.isHidden()) {
-            try {
-                if (cachedGameRenderStateField == null) {
-                    for (java.lang.reflect.Field f : mc.gameRenderer.getClass().getDeclaredFields()) {
-                        if (f.getType() == net.minecraft.client.renderer.state.GameRenderState.class) {
-                            f.setAccessible(true);
-                            cachedGameRenderStateField = f;
-                            break;
-                        }
-                    }
-                }
-
-                if (cachedGameRenderStateField != null) {
-                    net.minecraft.client.renderer.state.GameRenderState renderStateContainer =
-                        (net.minecraft.client.renderer.state.GameRenderState) cachedGameRenderStateField.get(mc.gameRenderer);
-
-                    if (renderStateContainer != null && renderStateContainer.guiRenderState != null) {
-                        GuiGraphicsExtractor context = new GuiGraphicsExtractor(
-                            mc,
-                            renderStateContainer.guiRenderState,
-                            mc.getWindow().getGuiScaledWidth(),
-                            mc.getWindow().getGuiScaledHeight()
-                        );
-                        LetterboxRenderer.renderFromHud(context, deltaTracker.getGameTimeDeltaPartialTick(true));
-                    }
-                }
-            } catch (Exception e) {
-                com.ji.afkcinematic.JiAFKCinematic.LOGGER.warn("Failed to reconstruct GuiGraphicsExtractor for 26.2 letterbox fallback", e);
+            if (CinematicHUDManager.shouldRenderPassiveChat(ConfigManager.getConfig())) {
+                jiAfk$extractChat(context, deltaTracker);
             }
             ci.cancel();
         }
     }
+
 }

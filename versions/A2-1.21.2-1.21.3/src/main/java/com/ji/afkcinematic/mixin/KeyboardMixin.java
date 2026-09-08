@@ -28,8 +28,13 @@ public class KeyboardMixin {
             return;
         }
         if (action != GLFW.GLFW_PRESS) return;
-        registerKeyboardActivity(key);
         boolean cinematicActive = CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE;
+        ModConfig shortcutConfig = ConfigManager.getConfig();
+        boolean toggleStep = !(shortcutConfig.toggleKey1 == -1 && shortcutConfig.toggleKey2 == -1)
+                && KeySequenceTracker.isToggleSequenceStep(key, shortcutConfig.toggleKey1, shortcutConfig.toggleKey2);
+        boolean immediateStep = !(shortcutConfig.immediateKey1 == -1 && shortcutConfig.immediateKey2 == -1)
+                && KeySequenceTracker.isImmediateSequenceStep(key, shortcutConfig.immediateKey1, shortcutConfig.immediateKey2);
+        if (!cinematicActive || (!toggleStep && !immediateStep)) registerKeyboardActivity(key, scanCode);
         if (!CinematicInputPolicy.shouldProcessModShortcuts(
                 MinecraftClient.getInstance().currentScreen instanceof ChatScreen,
                 cinematicActive, ConfigManager.getConfig().persistentMode)) {
@@ -40,17 +45,20 @@ public class KeyboardMixin {
             KeySequenceTracker.resetAll();
             return;
         }
-        processShortcuts(window, key);
+        processShortcuts(window, key, cinematicActive);
     }
 
-    private void registerKeyboardActivity(int keyCode) {
+    private void registerKeyboardActivity(int keyCode, int scanCode) {
         MinecraftClient client = MinecraftClient.getInstance();
         boolean chatOpen = client.currentScreen instanceof ChatScreen;
         CinematicInputPolicy.Event event = keyCode == GLFW.GLFW_KEY_ESCAPE
-                ? CinematicInputPolicy.Event.ESCAPE_KEY
-                : keyCode == GLFW.GLFW_KEY_T
-                    ? CinematicInputPolicy.Event.OPEN_CHAT_KEY
-                    : CinematicInputPolicy.Event.KEY_PRESS;
+                ? CinematicInputPolicy.Event.ESCAPE
+                : client.options.chatKey.matchesKey(keyCode, scanCode)
+                    || client.options.commandKey.matchesKey(keyCode, scanCode)
+                        ? CinematicInputPolicy.Event.CHAT_OPEN
+                        : chatOpen
+                            ? CinematicInputPolicy.Event.CHAT_INPUT
+                            : CinematicInputPolicy.Event.GAMEPLAY_ACTION;
         if (CinematicInputPolicy.shouldRegisterActivity(
                 CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE,
                 ConfigManager.getConfig().persistentMode, chatOpen, event)) {
@@ -58,7 +66,7 @@ public class KeyboardMixin {
         }
     }
 
-    private void processShortcuts(long window, int keyCode) {
+    private void processShortcuts(long window, int keyCode, boolean cinematicWasActive) {
         ModConfig cfg = ConfigManager.getConfig();
         MinecraftClient client = MinecraftClient.getInstance();
 
@@ -81,11 +89,18 @@ public class KeyboardMixin {
                 cfg.modEnabled = !cfg.modEnabled;
                 ConfigManager.saveConfig();
                 ToggleToastManager.show(cfg.modEnabled);
-                if (!cfg.modEnabled) {
-                    CinematicManager.forceDeactivate();
-                }
+                if (!cfg.modEnabled && cinematicWasActive) CinematicManager.forceDeactivate();
                 KeySequenceTracker.resetSequence(false);
                 return;
+            }
+        }
+
+        if (!(cfg.immediateKey1 == -1 && cfg.immediateKey2 == -1)) {
+            int[] immediateFirst = KeySequenceTracker.acceptedFirstKeys(cfg.immediateKey1);
+            if (KeySequenceTracker.checkImmediate(keyCode, immediateFirst, cfg.immediateKey2)) {
+                if (cinematicWasActive) CinematicManager.forceDeactivate();
+                else if (cfg.modEnabled) CinematicManager.toggleImmediate();
+                KeySequenceTracker.resetImmediateSequence();
             }
         }
     }

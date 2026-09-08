@@ -5,19 +5,34 @@ import net.minecraft.client.gui.screens.Screen;
 
 public class ScreenHelper {
     public static Screen getCurrentScreen(Minecraft client) {
-        try {
-            // Attempt 26.2 method first
-            return client.gui.screen();
-        } catch (NoSuchMethodError | NoSuchFieldError e) {
-            // Fallback to 26.1 by reflecting over fields to find the one of type Screen
-            for (java.lang.reflect.Field f : client.getClass().getFields()) {
-                if (f.getType() == Screen.class) {
-                    try {
-                        return (Screen) f.get(client);
-                    } catch (Exception ex) {
-                        break;
-                    }
+        // 26.2 moved the active screen behind Gui#screen(), while 26.1 keeps it
+        // on Minecraft. Avoid linking either member so one binary can load on both.
+        Screen guiScreen = findScreenFromNoArgMethod(client.gui);
+        if (guiScreen != null) {
+            return guiScreen;
+        }
+        for (Class<?> type = client.getClass(); type != null; type = type.getSuperclass()) {
+            for (java.lang.reflect.Field field : type.getDeclaredFields()) {
+                if (field.getType() != Screen.class) continue;
+                try {
+                    field.setAccessible(true);
+                    return (Screen) field.get(client);
+                } catch (ReflectiveOperationException | RuntimeException ignored) {
+                    // Try the next matching field.
                 }
+            }
+        }
+        return null;
+    }
+
+    private static Screen findScreenFromNoArgMethod(Object owner) {
+        if (owner == null) return null;
+        for (java.lang.reflect.Method method : owner.getClass().getMethods()) {
+            if (method.getParameterCount() != 0 || method.getReturnType() != Screen.class) continue;
+            try {
+                return (Screen) method.invoke(owner);
+            } catch (ReflectiveOperationException | RuntimeException ignored) {
+                // Try the next matching method.
             }
         }
         return null;

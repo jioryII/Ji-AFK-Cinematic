@@ -7,6 +7,7 @@ import com.ji.afkcinematic.afk.AFKDetector;
 import com.ji.afkcinematic.cinematic.CinematicManager;
 import com.ji.afkcinematic.cinematic.CinematicState;
 import com.ji.afkcinematic.config.ConfigManager;
+import com.ji.afkcinematic.config.ConfigScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.screens.ChatScreen;
@@ -28,7 +29,7 @@ public class MouseMixin {
     @Inject(method = "onMove", at = @At("HEAD"), require = 0)
     private void onCursorMove(long window, double x, double y, CallbackInfo ci) {
         // Register activity on every cursor movement — any single pixel cancels AFK / cinematic.
-        registerMouseActivity(CinematicInputPolicy.Event.MOUSE_MOVE);
+        registerMouseActivity(CinematicInputPolicy.Event.LOOK);
         // NOTE: do NOT cancel onMove here. The cinematic camera rotation is handled
         // inside CameraMixin via Camera.update, so cancelling the OS-level mouse event
         // was redundant and (if state ever desyncs) could freeze the user's cursor,
@@ -37,13 +38,17 @@ public class MouseMixin {
 
     @Inject(method = "onButton", at = @At("HEAD"), require = 0)
     private void onMouseClick(long window, net.minecraft.client.input.MouseButtonInfo input, int action, CallbackInfo ci) {
-        if (action == GLFW.GLFW_PRESS) registerMouseActivity(CinematicInputPolicy.Event.MOUSE_CLICK);
+        if (action == GLFW.GLFW_PRESS) registerMouseActivity(CinematicInputPolicy.Event.GAMEPLAY_ACTION);
         KeySequenceTracker.resetAll();
     }
 
     @Inject(method = "onScroll", at = @At("HEAD"), require = 0)
     private void onMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
-        registerMouseActivity(CinematicInputPolicy.Event.MOUSE_SCROLL);
+        if (com.ji.afkcinematic.ScreenHelper.getCurrentScreen(Minecraft.getInstance()) instanceof ConfigScreen screen) {
+            screen.scrollContent(vertical);
+            return;
+        }
+        registerMouseActivity(CinematicInputPolicy.Event.GAMEPLAY_ACTION);
     }
 
     private void registerMouseActivity(CinematicInputPolicy.Event event) {

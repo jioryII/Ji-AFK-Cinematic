@@ -9,6 +9,7 @@ import com.ji.afkcinematic.config.PersistentCinematicMode;
 import com.ji.afkcinematic.music.CinematicMusicManager;
 import com.ji.afkcinematic.render.CinematicHUDManager;
 import com.ji.afkcinematic.render.LetterboxRenderer;
+import com.ji.afkcinematic.ScreenHelper;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -55,8 +56,24 @@ public class CinematicManager implements AFKListener {
         com.ji.afkcinematic.afk.AFKDetector.setLockedOut(false);
     }
 
+    public static void toggleImmediate() {
+        if (state == CinematicState.CINEMATIC_ACTIVE) {
+            forceDeactivate();
+            return;
+        }
+        Minecraft client = Minecraft.getInstance();
+        if (client.player != null && client.level != null) {
+            AFKDetector.setLockedOut(false);
+            onAFKDetected();
+        }
+    }
+
     private static void tick() {
         Minecraft client = Minecraft.getInstance();
+        if (state == CinematicState.CINEMATIC_ACTIVE && ScreenHelper.getCurrentScreen(client) instanceof PauseScreen) {
+            forceDeactivate();
+            return;
+        }
         if (client.player == null || client.level == null || client.isPaused()) {
             return;
         }
@@ -75,8 +92,6 @@ public class CinematicManager implements AFKListener {
         }
 
         ModConfig config = ConfigManager.getConfig();
-        CinematicHUDManager.updateChatVisibility(config);
-
         // Direct damage respects the configured action. Predictive fall, fire and
         // low-health cancellation were removed to keep the cinematic behavior explicit.
         boolean tookDamage = client.player.hurtTime > 0;
@@ -106,7 +121,8 @@ public class CinematicManager implements AFKListener {
 
         if (currentShotIndex == 0 && cinematicTicks > 0) {
             currentCycle++;
-            if (currentCycle >= ConfigManager.getConfig().maxCycles) {
+            ModConfig config = ConfigManager.getConfig();
+            if (!config.isUnlimitedCycles() && currentCycle >= config.maxCycles) {
                 deactivateCinematic();
                 AFKDetector.setLockedOut(true);
                 return;
@@ -118,6 +134,7 @@ public class CinematicManager implements AFKListener {
     }
 
     public static void onAFKDetected() {
+        if (state == CinematicState.CINEMATIC_ACTIVE) return;
         ModConfig config = ConfigManager.getConfig();
         state = CinematicState.CINEMATIC_ACTIVE;
         

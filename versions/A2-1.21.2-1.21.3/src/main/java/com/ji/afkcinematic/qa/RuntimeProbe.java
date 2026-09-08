@@ -64,13 +64,13 @@ public final class RuntimeProbe {
             check(CameraController.getActiveEnvironmentShotCount() == 15 - characterShots,
                     "environment mix did not complement character shots");
 
-            check(!activity(true, CinematicInputPolicy.Event.OPEN_CHAT_KEY),
+            check(!activity(true, CinematicInputPolicy.Event.CHAT_OPEN),
                     "chat key incorrectly cancels persistent cinematic");
-            check(!activity(false, CinematicInputPolicy.Event.MOUSE_MOVE),
+            check(!activity(false, CinematicInputPolicy.Event.LOOK),
                     "mouse movement incorrectly cancels persistent cinematic");
-            check(!activity(true, CinematicInputPolicy.Event.MOUSE_CLICK),
+            check(!activity(true, CinematicInputPolicy.Event.CHAT_INPUT),
                     "chat click incorrectly cancels persistent cinematic");
-            check(activity(false, CinematicInputPolicy.Event.ESCAPE_KEY),
+            check(activity(false, CinematicInputPolicy.Event.ESCAPE),
                     "escape does not cancel persistent cinematic");
 
             RuntimeScreenHelper.openEmptyChat(client);

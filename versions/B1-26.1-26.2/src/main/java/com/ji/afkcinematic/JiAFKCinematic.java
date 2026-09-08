@@ -19,16 +19,17 @@ public class JiAFKCinematic implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     private static final int MIXIN_DIAGNOSTIC_DELAY_TICKS = 200;
     private static final java.util.Set<String> CRITICAL_MIXINS = java.util.Set.of(
-            "CameraMixin", "InGameHudMixin", "GameRendererMixin",
+            "CameraMixin", "GameRendererMixin",
             "KeyboardMixin", "MouseMixin", "MinecraftClientMixin");
     private static int mixinDiagnosticTicks;
     private static boolean mixinDiagnosticComplete;
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("Initializing {} v2.3.0", MOD_NAME);
+        LOGGER.info("Initializing {} v2.3.1", MOD_NAME);
         ConfigManager.loadConfig();
 
+        com.ji.afkcinematic.input.GameplayActivityMonitor.init();
         AFKDetector.init();
         CinematicManager.init();
         CinematicMusicManager.init();
@@ -61,6 +62,14 @@ public class JiAFKCinematic implements ClientModInitializer {
                         "This usually means a Minecraft API change; please report this version combination.",
                         critical, critical);
             }
+        }
+        String minecraftVersion = net.fabricmc.loader.api.FabricLoader.getInstance()
+                .getModContainer("minecraft")
+                .map(container -> container.getMetadata().getVersion().getFriendlyString())
+                .orElse("");
+        String hudMixin = minecraftVersion.startsWith("26.2") ? "Hud262Mixin" : "InGameHudMixin";
+        if (!com.ji.afkcinematic.diagnostic.MixinState.didApply(hudMixin)) {
+            LOGGER.warn("Critical mixin '{}' did not apply — cinematic HUD isolation will be broken.", hudMixin);
         }
     }
 }

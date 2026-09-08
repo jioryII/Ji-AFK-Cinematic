@@ -30,6 +30,11 @@ public abstract class CameraMixin {
     @Shadow
     protected abstract void setRotation(float yaw, float pitch);
 
+    @Inject(method = "update", at = @At("HEAD"), order = 500, require = 0)
+    private void beforeCameraUpdate(DeltaTracker tickCounter, CallbackInfo ci) {
+        com.ji.afkcinematic.compat.SmoothF5Compatibility.onCameraUpdate(this);
+    }
+
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;calculateFov(F)F"), require = 0)
     private void onCameraUpdate(DeltaTracker tickCounter, CallbackInfo ci) {
         CinematicState state = CinematicManager.getState();

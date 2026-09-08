@@ -5,25 +5,39 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ConfirmLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import com.ji.afkcinematic.music.LocalMusicPackManager;
 import org.lwjgl.glfw.GLFW;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ConfigScreen extends Screen {
     private final Screen parent;
     private ModConfig editConfig;
-    private enum RebindState { IDLE, MENU_WAITING_FIRST, MENU_WAITING_SECOND, TOGGLE_WAITING_FIRST, TOGGLE_WAITING_SECOND }
+    private enum RebindState { IDLE, MENU_WAITING_FIRST, MENU_WAITING_SECOND, TOGGLE_WAITING_FIRST, TOGGLE_WAITING_SECOND, IMMEDIATE_WAITING_FIRST, IMMEDIATE_WAITING_SECOND }
     private RebindState rebindState = RebindState.IDLE;
-    private int backupMenu1, backupMenu2, backupToggle1, backupToggle2;
+    private int backupMenu1, backupMenu2, backupToggle1, backupToggle2, backupImmediate1, backupImmediate2;
     private long rebindStartedMs = 0L;
     private ButtonWidget menuKeyButton;
     private ButtonWidget toggleKeyButton;
+    private ButtonWidget immediateKeyButton;
+    private ButtonWidget openMusicFolderButton;
+    private ButtonWidget refreshMusicButton;
     private ButtonWidget reportButton;
     private ButtonWidget modEnabledButton;
+    private final List<ClickableWidget> scrollableWidgets = new ArrayList<>();
+    private final Map<ClickableWidget, Integer> scrollableBaseY = new IdentityHashMap<>();
+    private int contentScroll;
+    private int maxContentScroll;
+    private static final int NORMAL_CONTENT_TOP = 80;
 
     // Estado para restaurar el label tras UNSUPPORTED_KEY_REJECTED.
     // Cuando processRebindKey devuelve 3, mostramos un mensaje rojo temporal
@@ -53,19 +67,25 @@ public class ConfigScreen extends Screen {
         this.editConfig.extendedMusic = current.extendedMusic;
         this.editConfig.modEnabled = current.modEnabled;
         this.editConfig.enableLetterbox = current.enableLetterbox;
+        this.editConfig.chatVisibility = current.chatVisibility;
         this.editConfig.enableMusic = current.enableMusic;
+        this.editConfig.musicMode = current.musicMode;
         this.editConfig.menuKey1 = current.menuKey1;
         this.editConfig.menuKey2 = current.menuKey2;
         this.editConfig.toggleKey1 = current.toggleKey1;
         this.editConfig.toggleKey2 = current.toggleKey2;
+        this.editConfig.immediateKey1 = current.immediateKey1;
+        this.editConfig.immediateKey2 = current.immediateKey2;
         this.editConfig.cinematicMusicVolume = current.cinematicMusicVolume;
     }
 
     @Override
     protected void init() {
+        scrollableWidgets.clear();
+        scrollableBaseY.clear();
         int centerX = this.width / 2;
-        int yLeft = 85;
-        int yRight = 85;
+        int yLeft = getContentTop() + 5;
+        int yRight = getContentTop() + 5;
         int widgetWidth = 135;
         int entryHeight = 26;
 
@@ -128,17 +148,22 @@ public class ConfigScreen extends Screen {
 
         this.addDrawableChild(new SliderWidget(
                 col1X, yLeft, widgetWidth, 20,
-                Text.translatable("config.ji_afkcinematic.max_cycles", editConfig.maxCycles),
-                (editConfig.maxCycles - 1.0) / 19.0
+                getMaxCyclesText(),
+                (editConfig.isUnlimitedCycles() ? 20.0 : editConfig.maxCycles - 1.0) / 20.0
         ) {
+            private int selectedIndex() { return (int) Math.round(this.value * 20.0); }
             @Override
             protected void updateMessage() {
-                int val = 1 + (int) (this.value * 19);
-                this.setMessage(Text.translatable("config.ji_afkcinematic.max_cycles", val));
+                int index = selectedIndex();
+                this.setMessage(Text.translatable("config.ji_afkcinematic.max_cycles",
+                        index == 20 ? Text.translatable("config.ji_afkcinematic.unlimited") : Integer.toString(index + 1)));
             }
             @Override
             protected void applyValue() {
-                editConfig.maxCycles = 1 + (int) (this.value * 19);
+                int index = selectedIndex();
+                this.value = index / 20.0;
+                editConfig.maxCycles = index == 20 ? ModConfig.UNLIMITED_CYCLES : index + 1;
+                updateMessage();
             }
             { setTooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.max_cycles"))); }
         });
@@ -207,6 +232,16 @@ public class ConfigScreen extends Screen {
         yRight += entryHeight;
 
         this.addDrawableChild(ButtonWidget.builder(
+                getChatVisibilityText(),
+                button -> {
+                    editConfig.chatVisibility = editConfig.chatVisibility.next();
+                    button.setMessage(getChatVisibilityText());
+                }
+        ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.chat_visibility")))
+         .dimensions(col2X, yRight, widgetWidth, 20).build());
+        yRight += entryHeight;
+
+        this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("config.ji_afkcinematic.camera_rotation")
                         .append(": ").append(getOnOffText(editConfig.cameraRotationEnabled)),
                 button -> {
@@ -245,27 +280,61 @@ public class ConfigScreen extends Screen {
         ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.extended_music"))).dimensions(col2X, yRight, widgetWidth, 20).build());
         yRight += entryHeight;
 
+        this.addDrawableChild(ButtonWidget.builder(
+                getMusicModeText(),
+                button -> {
+                    editConfig.musicMode = editConfig.musicMode.next();
+                    button.setMessage(getMusicModeText());
+                    updateMusicFolderVisibility();
+                }
+        ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.music_mode")))
+         .dimensions(col1X, yLeft, widgetWidth, 20).build());
+        yLeft += entryHeight;
+
         int centerStartY = Math.max(yLeft, yRight) + 5;
+
+        openMusicFolderButton = ButtonWidget.builder(
+                Text.translatable("config.ji_afkcinematic.open_music_folder"),
+                button -> LocalMusicPackManager.openMusicFolder()
+        ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.open_music_folder")))
+         .dimensions(col1X, centerStartY, widgetWidth, 20).build();
+        this.addDrawableChild(openMusicFolderButton);
+
+        refreshMusicButton = ButtonWidget.builder(
+                Text.translatable("config.ji_afkcinematic.refresh_music"),
+                button -> {
+                    LocalMusicPackManager.rebuildAndReload();
+                    button.setMessage(Text.translatable("config.ji_afkcinematic.refresh_music_done"));
+                }
+        ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.refresh_music")))
+         .dimensions(col2X, centerStartY, widgetWidth, 20).build();
+        this.addDrawableChild(refreshMusicButton);
+        centerStartY += entryHeight + 5;
 
         // Menu shortcut. Clicking it starts the normal two-key rebind flow.
         menuKeyButton = ButtonWidget.builder(
             getMenuKeysText(),
             button -> startMenuRebind()
         ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.menu_keys")))
-         .dimensions(centerX - widgetWidth / 2, centerStartY, widgetWidth, 20).build();
+         .dimensions(col1X, centerStartY, widgetWidth, 20).build();
         this.addDrawableChild(menuKeyButton);
-
-        centerStartY += entryHeight;
 
         // Quick-toggle shortcut.
         toggleKeyButton = ButtonWidget.builder(
             getToggleKeysText(),
             button -> startToggleRebind()
         ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.toggle_keys")))
-         .dimensions(centerX - widgetWidth / 2, centerStartY, widgetWidth, 20).build();
+         .dimensions(col2X, centerStartY, widgetWidth, 20).build();
         this.addDrawableChild(toggleKeyButton);
 
         centerStartY += entryHeight;
+
+        immediateKeyButton = ButtonWidget.builder(
+            getImmediateKeysText(),
+            button -> startImmediateRebind()
+        ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.immediate_keys")))
+         .dimensions(col1X, centerStartY, widgetWidth, 20).build();
+        this.addDrawableChild(immediateKeyButton);
 
         modEnabledButton = ButtonWidget.builder(
                 Text.translatable("config.ji_afkcinematic.enabled").append(": ").append(getActiveDisabledText(editConfig.modEnabled)),
@@ -273,8 +342,11 @@ public class ConfigScreen extends Screen {
                     editConfig.modEnabled = !editConfig.modEnabled;
                     button.setMessage(Text.translatable("config.ji_afkcinematic.enabled").append(": ").append(getActiveDisabledText(editConfig.modEnabled)));
                 }
-        ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.enabled"))).dimensions(centerX - widgetWidth / 2, centerStartY, widgetWidth, 20).build();
+        ).tooltip(Tooltip.of(Text.translatable("config.ji_afkcinematic.tooltip.enabled"))).dimensions(col2X, centerStartY, widgetWidth, 20).build();
         this.addDrawableChild(modEnabledButton);
+
+        captureScrollableWidgets();
+        updateMusicFolderVisibility();
 
         this.reportButton = ButtonWidget.builder(
                 Text.literal("§e⚠"),
@@ -295,8 +367,14 @@ public class ConfigScreen extends Screen {
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("config.ji_afkcinematic.save"),
                 button -> {
+                    ModConfig current = ConfigManager.getConfig();
+                    boolean musicSettingsChanged = current.musicMode != editConfig.musicMode
+                            || current.enableMusic != editConfig.enableMusic
+                            || current.extendedMusic != editConfig.extendedMusic
+                            || LocalMusicPackManager.hasSourceChanges();
                     editConfig.recalculate();
                     ConfigManager.setConfig(editConfig);
+                    if (musicSettingsChanged) LocalMusicPackManager.rebuildAndReload();
                     this.close();
                 }
         ).dimensions(centerX - 50, bottomY, 100, 20).build());
@@ -305,6 +383,63 @@ public class ConfigScreen extends Screen {
                 Text.translatable("config.ji_afkcinematic.cancel"),
                 button -> this.close()
         ).dimensions(centerX + 55, bottomY, 100, 20).build());
+        configureScrolling();
+    }
+
+    private void captureScrollableWidgets() {
+        for (Object child : this.children()) {
+            if (child instanceof ClickableWidget widget) {
+                scrollableWidgets.add(widget);
+                scrollableBaseY.put(widget, widget.getY());
+            }
+        }
+    }
+
+    private void configureScrolling() {
+        int viewportBottom = this.height - 45;
+        int contentBottom = getContentTop();
+        for (ClickableWidget widget : scrollableWidgets) {
+            contentBottom = Math.max(contentBottom, scrollableBaseY.get(widget) + widget.getHeight());
+        }
+        maxContentScroll = Math.max(0, contentBottom - viewportBottom + 4);
+        contentScroll = Math.max(0, Math.min(contentScroll, maxContentScroll));
+        applyScrolling();
+    }
+
+    private void applyScrolling() {
+        int viewportBottom = this.height - 45;
+        for (ClickableWidget widget : scrollableWidgets) {
+            int y = scrollableBaseY.get(widget) - contentScroll;
+            widget.setY(y);
+            boolean inside = y >= getContentTop() && y + widget.getHeight() <= viewportBottom;
+            boolean customMusicControl = widget == openMusicFolderButton || widget == refreshMusicButton;
+            widget.visible = inside && (!customMusicControl || editConfig.musicMode.includesCustom());
+            widget.active = widget.visible;
+        }
+    }
+
+    private int getContentTop() {
+        return this.height < 360 ? 46 : NORMAL_CONTENT_TOP;
+    }
+
+    private void updateMusicFolderVisibility() {
+        if (openMusicFolderButton == null) return;
+        Integer baseY = scrollableBaseY.get(openMusicFolderButton);
+        int y = baseY == null ? openMusicFolderButton.getY() : baseY - contentScroll;
+        boolean inside = y >= getContentTop() && y + openMusicFolderButton.getHeight() <= this.height - 45;
+        openMusicFolderButton.visible = editConfig.musicMode.includesCustom() && inside;
+        openMusicFolderButton.active = openMusicFolderButton.visible;
+        if (refreshMusicButton != null) {
+            refreshMusicButton.visible = editConfig.musicMode.includesCustom() && inside;
+            refreshMusicButton.active = refreshMusicButton.visible;
+        }
+    }
+
+    public void scrollContent(double vertical) {
+        if (maxContentScroll <= 0) return;
+        contentScroll = Math.max(0, Math.min(maxContentScroll,
+                contentScroll - (int) Math.round(vertical * 22.0)));
+        applyScrolling();
     }
 
     private Text getDamageActionText() {
@@ -322,6 +457,22 @@ public class ConfigScreen extends Screen {
         String key = "config.ji_afkcinematic.persistent_mode."
                 + editConfig.persistentMode.name().toLowerCase();
         return Text.translatable("config.ji_afkcinematic.persistent_cinematics")
+                .append(": ").append(Text.translatable(key).formatted(color));
+    }
+
+    private Text getMaxCyclesText() {
+        Object value = editConfig.isUnlimitedCycles()
+                ? Text.translatable("config.ji_afkcinematic.unlimited")
+                : Integer.toString(editConfig.maxCycles);
+        return Text.translatable("config.ji_afkcinematic.max_cycles", value);
+    }
+
+    private Text getChatVisibilityText() {
+        String key = "config.ji_afkcinematic.chat_visibility."
+                + editConfig.chatVisibility.name().toLowerCase();
+        Formatting color = editConfig.chatVisibility == CinematicChatVisibility.VISIBLE
+                ? Formatting.YELLOW : Formatting.RED;
+        return Text.translatable("config.ji_afkcinematic.chat_visibility")
                 .append(": ").append(Text.translatable(key).formatted(color));
     }
 
@@ -349,6 +500,24 @@ public class ConfigScreen extends Screen {
                 .append(Text.literal(keys).formatted(Formatting.YELLOW));
     }
 
+    private Text getImmediateKeysText() {
+        return Text.empty()
+                .append(Text.translatable("config.ji_afkcinematic.immediate_keys.label").formatted(Formatting.WHITE))
+                .append(isImmediateDisabled()
+                        ? Text.translatable("config.ji_afkcinematic.keybind_disabled_label")
+                        : Text.literal(formatKeys(editConfig.immediateKey1, editConfig.immediateKey2)).formatted(Formatting.YELLOW));
+    }
+
+    private Text getMusicModeText() {
+        Formatting color = switch (editConfig.musicMode) {
+            case VANILLA -> Formatting.GREEN;
+            case MIXED -> Formatting.GOLD;
+            case CUSTOM -> Formatting.YELLOW;
+        };
+        return Text.translatable("config.ji_afkcinematic.music_mode").append(": ")
+                .append(Text.translatable("config.ji_afkcinematic.music_mode." + editConfig.musicMode.name().toLowerCase()).formatted(color));
+    }
+
     private Text getActiveDisabledText(boolean value) {
         if (value) return Text.literal("§a").append(Text.translatable("config.ji_afkcinematic.active"));
         return Text.literal("§c").append(Text.translatable("config.ji_afkcinematic.disabled"));
@@ -363,6 +532,17 @@ public class ConfigScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
+        if (maxContentScroll > 0) {
+            int top = getContentTop();
+            int bottom = this.height - 45;
+            int trackX = this.width / 2 + 150;
+            int trackHeight = bottom - top;
+            int thumbHeight = Math.max(18, trackHeight * trackHeight / (trackHeight + maxContentScroll));
+            int thumbY = top + (trackHeight - thumbHeight) * contentScroll / maxContentScroll;
+            context.fill(trackX, top, trackX + 3, bottom, 0x55333333);
+            context.fill(trackX, thumbY, trackX + 3, thumbY + thumbHeight, 0xFFAAAAAA);
+        }
+
         if (this.reportButton != null) {
             long time = System.currentTimeMillis() / 800;
             int phase = (int) (time % 3);
@@ -371,8 +551,9 @@ public class ConfigScreen extends Screen {
             else this.reportButton.setMessage(Text.literal("§a✉"));
         }
 
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§6§lJi AFK Cinematic"), this.width / 2, 55, 0xFFFFFFFF);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§5By jiory_"), this.width / 2, 65, 0xFFFFFFFF);
+        int titleY = this.height < 360 ? 17 : 55;
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§6§lJi AFK Cinematic"), this.width / 2, titleY, 0xFFFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§5By jiory_"), this.width / 2, titleY + 10, 0xFFFFFFFF);
     }
 
     /**
@@ -400,13 +581,16 @@ public class ConfigScreen extends Screen {
             //   - Antes de pulsar la primera tecla -> ambas teclas = -1 (NONE)
             //   - Despues de pulsar la primera -> cancelar y restaurar como estaba
             if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
-                if (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.TOGGLE_WAITING_FIRST) {
+                if (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.TOGGLE_WAITING_FIRST || rebindState == RebindState.IMMEDIATE_WAITING_FIRST) {
                     if (rebindState == RebindState.MENU_WAITING_FIRST) {
                         editConfig.menuKey1 = -1;
                         editConfig.menuKey2 = -1;
-                    } else {
+                    } else if (rebindState == RebindState.TOGGLE_WAITING_FIRST) {
                         editConfig.toggleKey1 = -1;
                         editConfig.toggleKey2 = -1;
+                    } else {
+                        editConfig.immediateKey1 = -1;
+                        editConfig.immediateKey2 = -1;
                     }
                     rebindState = RebindState.IDLE;
                     com.ji.afkcinematic.input.KeySequenceTracker.resetRebind();
@@ -417,7 +601,7 @@ public class ConfigScreen extends Screen {
                 return true;
             }
             // Timeout: si estamos esperando la 1a o 2a tecla y pasaron >1.5s -> restaurar
-            if (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.TOGGLE_WAITING_FIRST) {
+            if (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.TOGGLE_WAITING_FIRST || rebindState == RebindState.IMMEDIATE_WAITING_FIRST) {
                 if (System.currentTimeMillis() - rebindStartedMs > com.ji.afkcinematic.input.KeySequenceTracker.SEQUENCE_TIMEOUT_MS) {
                     cancelRebind();
                     return true;
@@ -435,9 +619,9 @@ public class ConfigScreen extends Screen {
 
             // GLFW_KEY_UNKNOWN y codigos fuera de rango no son atajos persistibles.
             if (result == com.ji.afkcinematic.input.KeySequenceTracker.UNSUPPORTED_KEY_REJECTED) {
-                ButtonWidget target = (rebindState == RebindState.MENU_WAITING_FIRST
-                                  || rebindState == RebindState.MENU_WAITING_SECOND)
-                                  ? menuKeyButton : toggleKeyButton;
+                ButtonWidget target = (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.MENU_WAITING_SECOND)
+                                  ? menuKeyButton : (rebindState == RebindState.TOGGLE_WAITING_FIRST || rebindState == RebindState.TOGGLE_WAITING_SECOND)
+                                  ? toggleKeyButton : immediateKeyButton;
                 pendingLabelTarget = target;
                 pendingLabelOriginal = target.getMessage();
                 target.setMessage(Text.literal("Unsupported key")
@@ -457,7 +641,7 @@ public class ConfigScreen extends Screen {
                     rebindState = RebindState.IDLE; com.ji.afkcinematic.input.KeySequenceTracker.resetRebind(); refreshKeyButtonLabels();
 
                 }
-            } else {
+            } else if (rebindState == RebindState.TOGGLE_WAITING_FIRST || rebindState == RebindState.TOGGLE_WAITING_SECOND) {
                 if (result == 1) {
                     rebindState = RebindState.TOGGLE_WAITING_SECOND;
                     toggleKeyButton.setMessage(Text.translatable("config.ji_afkcinematic.key_waiting_second"));
@@ -466,6 +650,15 @@ public class ConfigScreen extends Screen {
                     editConfig.toggleKey2 = out[1];
                     rebindState = RebindState.IDLE; com.ji.afkcinematic.input.KeySequenceTracker.resetRebind(); refreshKeyButtonLabels();
 
+                }
+            } else {
+                if (result == 1) {
+                    rebindState = RebindState.IMMEDIATE_WAITING_SECOND;
+                    immediateKeyButton.setMessage(Text.translatable("config.ji_afkcinematic.key_waiting_second"));
+                } else if (result == 2) {
+                    editConfig.immediateKey1 = out[0];
+                    editConfig.immediateKey2 = out[1];
+                    rebindState = RebindState.IDLE; com.ji.afkcinematic.input.KeySequenceTracker.resetRebind(); refreshKeyButtonLabels();
                 }
             }
             return true;
@@ -569,11 +762,20 @@ public class ConfigScreen extends Screen {
         toggleKeyButton.setMessage(Text.translatable("config.ji_afkcinematic.key_waiting_first"));
     }
 
+    private void startImmediateRebind() {
+        backupImmediate1 = editConfig.immediateKey1; backupImmediate2 = editConfig.immediateKey2;
+        rebindState = RebindState.IMMEDIATE_WAITING_FIRST; com.ji.afkcinematic.input.KeySequenceTracker.startRebind();
+        rebindStartedMs = System.currentTimeMillis();
+        immediateKeyButton.setMessage(Text.translatable("config.ji_afkcinematic.key_waiting_first"));
+    }
+
     private void cancelRebind() {
         if (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.MENU_WAITING_SECOND) {
             editConfig.menuKey1 = backupMenu1; editConfig.menuKey2 = backupMenu2;
-        } else {
+        } else if (rebindState == RebindState.TOGGLE_WAITING_FIRST || rebindState == RebindState.TOGGLE_WAITING_SECOND) {
             editConfig.toggleKey1 = backupToggle1; editConfig.toggleKey2 = backupToggle2;
+        } else {
+            editConfig.immediateKey1 = backupImmediate1; editConfig.immediateKey2 = backupImmediate2;
         }
         rebindState = RebindState.IDLE; com.ji.afkcinematic.input.KeySequenceTracker.resetRebind();
         refreshKeyButtonLabels();
@@ -582,6 +784,7 @@ public class ConfigScreen extends Screen {
     private void refreshKeyButtonLabels() {
         menuKeyButton.setMessage(getMenuKeysText());
         toggleKeyButton.setMessage(getToggleKeysText());
+        immediateKeyButton.setMessage(getImmediateKeysText());
     }
 
     private boolean isMenuDisabled() {
@@ -590,6 +793,10 @@ public class ConfigScreen extends Screen {
 
     private boolean isToggleDisabled() {
         return editConfig.toggleKey1 == -1 && editConfig.toggleKey2 == -1;
+    }
+
+    private boolean isImmediateDisabled() {
+        return editConfig.immediateKey1 == -1 && editConfig.immediateKey2 == -1;
     }
 
 }

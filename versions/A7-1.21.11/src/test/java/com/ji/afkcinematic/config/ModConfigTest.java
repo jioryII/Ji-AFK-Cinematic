@@ -74,5 +74,27 @@ class ModConfigTest {
         assertEquals(PersistentCinematicMode.NORMAL, config.persistentMode);
         assertEquals(30, config.characterShotPercentage);
         assertEquals(0.5f, config.cinematicMusicVolume, 0.0001f);
+        assertEquals(CinematicChatVisibility.VISIBLE, config.chatVisibility);
+        assertEquals(GLFW.GLFW_KEY_LEFT_CONTROL, config.toggleKey1);
+        assertEquals(GLFW.GLFW_KEY_H, config.toggleKey2);
+        assertEquals(GLFW.GLFW_KEY_F7, config.immediateKey1);
+        assertEquals(GLFW.GLFW_KEY_I, config.immediateKey2);
+        assertEquals(MusicMode.VANILLA, config.musicMode);
+    }
+
+    @Test
+    void unlimitedCyclesSurviveRecalculationAndOtherValuesAreClamped() {
+        ModConfig config = new ModConfig();
+        config.maxCycles = ModConfig.UNLIMITED_CYCLES;
+        config.recalculate();
+        assertTrue(config.isUnlimitedCycles());
+
+        config.maxCycles = 0;
+        config.recalculate();
+        assertEquals(1, config.maxCycles);
+
+        config.maxCycles = 99;
+        config.recalculate();
+        assertEquals(20, config.maxCycles);
     }
 }

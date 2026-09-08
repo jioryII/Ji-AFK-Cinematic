@@ -21,6 +21,12 @@ public class ConfigManager {
             if (Files.exists(CONFIG_PATH)) {
                 try (Reader reader = new BufferedReader(new FileReader(CONFIG_PATH.toFile()))) {
                     JsonObject raw = JsonParser.parseReader(reader).getAsJsonObject();
+                    if (raw.has("chatVisibility")) {
+                        String legacyChat = raw.get("chatVisibility").getAsString();
+                        if ("PERSISTENT_MODES".equals(legacyChat) || "ALWAYS".equals(legacyChat)) {
+                            raw.addProperty("chatVisibility", "VISIBLE");
+                        }
+                    }
                     ModConfig loaded = GSON.fromJson(raw, ModConfig.class);
                     if (loaded != null) {
                         // A missing field is different from an intentional 0%. Preserve
@@ -35,6 +41,11 @@ public class ConfigManager {
                         }
                         if (!raw.has("cameraRotationEnabled")) loaded.cameraRotationEnabled = false;
                         if (!raw.has("cinematicMusicVolume")) loaded.cinematicMusicVolume = 0.5f;
+                        if (!raw.has("chatVisibility")) loaded.chatVisibility = CinematicChatVisibility.VISIBLE;
+                        if (!raw.has("musicMode")) {
+                            loaded.musicMode = raw.has("thirdPartyMusic") && raw.get("thirdPartyMusic").getAsBoolean()
+                                    ? MusicMode.MIXED : MusicMode.VANILLA;
+                        }
                         config = loaded;
                     }
                 }
@@ -82,6 +93,38 @@ public class ConfigManager {
         // policy. A legacy enabled value is preserved as INTERACTIVE by loadConfig().
         if (config.configVersion < 5 && config.persistentMode == null) {
             config.persistentMode = PersistentCinematicMode.NORMAL;
+        }
+
+        // v5 -> v6: chat-only HUD policy, unlimited cycles and opt-in pack music.
+        if (config.configVersion < 6) {
+            if (config.chatVisibility == null) {
+                config.chatVisibility = CinematicChatVisibility.VISIBLE;
+            }
+            config.thirdPartyMusic = false;
+        }
+
+        // v6 -> v7: binary chat visibility and an immediate F7 + I cinematic toggle.
+        if (config.configVersion < 7) {
+            if (config.chatVisibility == null) config.chatVisibility = CinematicChatVisibility.VISIBLE;
+            if (config.toggleKey1 == 341 && config.toggleKey2 == 72) {
+                config.toggleKey1 = 296;
+                config.toggleKey2 = 73;
+            }
+        }
+
+        // v7 -> v8: restore Ctrl+H as the enable/disable shortcut and keep
+        // F7+I as a separate immediate-cinematic action. The old third-party
+        // toggle migrates naturally to VANILLA or MIXED.
+        if (config.configVersion < 8) {
+            if (config.toggleKey1 == 296 && config.toggleKey2 == 73) {
+                config.toggleKey1 = 341;
+                config.toggleKey2 = 72;
+            }
+            config.immediateKey1 = 296;
+            config.immediateKey2 = 73;
+            if (config.musicMode == null) {
+                config.musicMode = config.thirdPartyMusic ? MusicMode.MIXED : MusicMode.VANILLA;
+            }
         }
 
         config.configVersion = ModConfig.CURRENT_CONFIG_VERSION;
