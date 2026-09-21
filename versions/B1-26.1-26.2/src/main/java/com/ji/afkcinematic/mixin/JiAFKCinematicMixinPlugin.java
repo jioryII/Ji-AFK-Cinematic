@@ -34,6 +34,8 @@ public class JiAFKCinematicMixinPlugin implements IMixinConfigPlugin {
         boolean is262 = version.startsWith("26.2");
         if (mixinClassName.endsWith("Hud262Mixin")) return is262;
         if (mixinClassName.endsWith("InGameHudMixin")) return !is262;
+        if (mixinClassName.endsWith("GuiPauseMixin")) return is262;
+        if (mixinClassName.endsWith("MinecraftPauseMixin")) return !is262;
         return true;
     }
 

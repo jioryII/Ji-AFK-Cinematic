@@ -21,6 +21,7 @@ public class CinematicMusicManager {
     private static float currentFade = 1.0f;
     private static final float FADE_SPEED = 0.01f;
     private static int missingTrackRetryTicks;
+    private static boolean previousMusicStopped;
 
     private static final List<Object> trackPool = new ArrayList<>();
     private static final BalancedShuffleBag<Object> shuffleBag = new BalancedShuffleBag<>();
@@ -33,6 +34,8 @@ public class CinematicMusicManager {
 
     public static void init() {
         LocalMusicPackManager.initialize();
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STARTED.register(
+                LocalMusicPackManager::completeStartupLoad);
         ThirdPartyMusicRegistry.init();
         ClientTickEvents.END_CLIENT_TICK.register(client -> tick(Minecraft.getInstance()));
     }
@@ -48,8 +51,7 @@ public class CinematicMusicManager {
         currentFade = 1.0f;
         isOurMusicPlaying = true;
         missingTrackRetryTicks = 0;
-        playCinematicMusicSafe(client);
-        missingTrackRetryTicks = 20;
+        previousMusicStopped = false;
     }
 
     public static void stopMusic() {
@@ -57,14 +59,6 @@ public class CinematicMusicManager {
             state = FadeState.FADE_OUT_CINEMATIC;
             if (currentInstance != null) {
                 currentInstance.fadeOutAndStop();
-            } else {
-                isOurMusicPlaying = false;
-                currentInstance = null;
-                state = FadeState.IDLE;
-                if (originalMusicVolume != -1.0f) {
-                    setMusicOptionVolume(Minecraft.getInstance(), originalMusicVolume);
-                    originalMusicVolume = -1.0f;
-                }
             }
         }
     }
@@ -77,6 +71,7 @@ public class CinematicMusicManager {
         isOurMusicPlaying = false;
         missingTrackRetryTicks = 0;
         state = FadeState.IDLE;
+        previousMusicStopped = false;
         if (originalMusicVolume != -1.0f) {
             setMusicOptionVolume(Minecraft.getInstance(), originalMusicVolume);
             originalMusicVolume = -1.0f;
@@ -85,7 +80,8 @@ public class CinematicMusicManager {
 
     private static void tick(Minecraft client) {
         if (missingTrackRetryTicks > 0) missingTrackRetryTicks--;
-        if (isOurMusicPlaying && state != FadeState.FADE_OUT_CINEMATIC) {
+        if (isOurMusicPlaying && state != FadeState.FADE_OUT_GAME
+                && state != FadeState.FADE_OUT_CINEMATIC) {
             retryMissingTrack(client);
         }
 
@@ -99,26 +95,29 @@ public class CinematicMusicManager {
                 currentFade = 0.0f;
                 setMusicOptionVolume(client, 0.0f);
                 stopVanillaMusic(client);
-                state = FadeState.FADE_IN_CINEMATIC;
+                previousMusicStopped = true;
+                playCinematicMusicSafe(client);
+                missingTrackRetryTicks = 20;
+                state = FadeState.IDLE;
             } else {
                 setMusicOptionVolume(client, originalMusicVolume * currentFade);
             }
-        } else if (state == FadeState.FADE_IN_CINEMATIC) {
-            currentFade += FADE_SPEED;
-            if (currentFade >= 1.0f) {
-                currentFade = 1.0f;
-                state = FadeState.IDLE;
-            }
-            setMusicOptionVolume(client, originalMusicVolume * currentFade);
         } else if (state == FadeState.FADE_OUT_CINEMATIC) {
             if (currentInstance == null || currentInstance.isStopped()) {
+                currentInstance = null;
+                if (!previousMusicStopped && currentFade < 1.0f) {
+                    currentFade = Math.min(1.0f, currentFade + FADE_SPEED);
+                    setMusicOptionVolume(client, originalMusicVolume * currentFade);
+                    if (currentFade < 1.0f) return;
+                }
+                if (previousMusicStopped) stopVanillaMusic(client);
                 if (originalMusicVolume != -1.0f) {
                     setMusicOptionVolume(client, originalMusicVolume);
                     originalMusicVolume = -1.0f;
                 }
                 state = FadeState.IDLE;
                 isOurMusicPlaying = false;
-                currentInstance = null;
+                previousMusicStopped = false;
             }
         }
     }
@@ -198,6 +197,9 @@ public class CinematicMusicManager {
     private static void stopVanillaMusic(Minecraft client) {
         if (client.getMusicManager() != null) {
             client.getMusicManager().stopPlaying();
+        }
+        if (client.getSoundManager() != null) {
+            client.getSoundManager().stop(null, net.minecraft.sounds.SoundSource.MUSIC);
         }
     }
 

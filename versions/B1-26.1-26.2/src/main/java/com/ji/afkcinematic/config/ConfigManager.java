@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ji.afkcinematic.JiAFKCinematic;
+import com.ji.afkcinematic.input.PortableKeyBinding;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.*;
@@ -46,6 +47,22 @@ public class ConfigManager {
                             loaded.musicMode = raw.has("thirdPartyMusic") && raw.get("thirdPartyMusic").getAsBoolean()
                                     ? MusicMode.MIXED : MusicMode.VANILLA;
                         }
+                        if (!raw.has("sleepLetterboxMode")) {
+                            boolean enabled = !raw.has("sleepLetterboxEnabled")
+                                    || raw.get("sleepLetterboxEnabled").getAsBoolean();
+                            loaded.sleepLetterboxMode = enabled
+                                    ? SleepLetterboxMode.MODERATE : SleepLetterboxMode.DISABLED;
+                        }
+                        if (!raw.has("customMusicDirectory")) loaded.customMusicDirectory = "";
+                        if (!raw.has("fishingCinematicEnabled")) loaded.fishingCinematicEnabled = true;
+                        if (!raw.has("fishingCinematicThresholdSeconds")) loaded.fishingCinematicThresholdSeconds = 10;
+                        if (!raw.has("menuKey1Name")) loaded.menuKey1Name = PortableKeyBinding.nameOf(loaded.menuKey1);
+                        if (!raw.has("menuKey2Name")) loaded.menuKey2Name = PortableKeyBinding.nameOf(loaded.menuKey2);
+                        if (!raw.has("toggleKey1Name")) loaded.toggleKey1Name = PortableKeyBinding.nameOf(loaded.toggleKey1);
+                        if (!raw.has("toggleKey2Name")) loaded.toggleKey2Name = PortableKeyBinding.nameOf(loaded.toggleKey2);
+                        if (!raw.has("immediateKey1Name")) loaded.immediateKey1Name = PortableKeyBinding.nameOf(loaded.immediateKey1);
+                        if (!raw.has("immediateKey2Name")) loaded.immediateKey2Name = PortableKeyBinding.nameOf(loaded.immediateKey2);
+                        loaded.applyPortableKeyNames();
                         config = loaded;
                     }
                 }
@@ -127,12 +144,18 @@ public class ConfigManager {
             }
         }
 
+        if (config.configVersion < 12) config.fishingCinematicThresholdSeconds = 10;
+        if (config.configVersion < 13 && config.sleepLetterboxMode == null) {
+            config.sleepLetterboxMode = SleepLetterboxMode.MODERATE;
+        }
+
         config.configVersion = ModConfig.CURRENT_CONFIG_VERSION;
         saveConfig();
     }
 
     public static void saveConfig() {
         try {
+            config.syncPortableKeyNames();
             Files.createDirectories(CONFIG_PATH.getParent());
             try (Writer writer = new BufferedWriter(new FileWriter(CONFIG_PATH.toFile()))) {
                 GSON.toJson(config, writer);

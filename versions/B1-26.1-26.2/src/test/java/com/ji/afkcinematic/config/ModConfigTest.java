@@ -80,6 +80,41 @@ class ModConfigTest {
         assertEquals(GLFW.GLFW_KEY_F7, config.immediateKey1);
         assertEquals(GLFW.GLFW_KEY_I, config.immediateKey2);
         assertEquals(MusicMode.VANILLA, config.musicMode);
+        assertEquals(SleepLetterboxMode.MODERATE, config.sleepLetterboxMode);
+        assertTrue(config.fishingCinematicEnabled);
+        assertEquals("", config.customMusicDirectory);
+    }
+
+    @Test
+    void fishingThresholdDefaultsToTenSecondsAndAllowsImmediateStart() {
+        ModConfig config = new ModConfig();
+        assertEquals(10, config.fishingCinematicThresholdSeconds);
+        config.fishingCinematicThresholdSeconds = -4;
+        config.recalculate();
+        assertEquals(0, config.fishingCinematicThresholdSeconds);
+        assertEquals(0, config.fishingCinematicThresholdTicks);
+        config.fishingCinematicThresholdSeconds = 999;
+        config.recalculate();
+        assertEquals(120, config.fishingCinematicThresholdSeconds);
+        assertEquals(2400, config.fishingCinematicThresholdTicks);
+    }
+
+    @Test
+    void nullableSleepAndMusicFolderSettingsAreRepaired() {
+        ModConfig config = new ModConfig();
+        config.sleepLetterboxMode = null;
+        config.customMusicDirectory = null;
+        config.recalculate();
+        assertEquals(SleepLetterboxMode.MODERATE, config.sleepLetterboxMode);
+        assertTrue(config.fishingCinematicEnabled);
+        assertEquals("", config.customMusicDirectory);
+    }
+
+    @Test
+    void sleepLetterboxModeCyclesThroughAllThreeStates() {
+        assertEquals(SleepLetterboxMode.MODERATE, SleepLetterboxMode.DISABLED.next());
+        assertEquals(SleepLetterboxMode.COMPLETE, SleepLetterboxMode.MODERATE.next());
+        assertEquals(SleepLetterboxMode.DISABLED, SleepLetterboxMode.COMPLETE.next());
     }
 
     @Test
@@ -97,4 +132,52 @@ class ModConfigTest {
         config.recalculate();
         assertEquals(20, config.maxCycles);
     }
-}
+
+    @Test
+    void portableNamesRestoreCustomAndDisabledBindings() {
+        ModConfig config = new ModConfig();
+        config.menuKey1 = GLFW.GLFW_KEY_DELETE;
+        config.menuKey2 = GLFW.GLFW_KEY_RIGHT;
+        config.toggleKey1 = -1;
+        config.toggleKey2 = -1;
+        config.syncPortableKeyNames();
+
+        assertEquals("key.keyboard.delete", config.menuKey1Name);
+        assertEquals("key.keyboard.right", config.menuKey2Name);
+        assertEquals("disabled", config.toggleKey1Name);
+
+        config.menuKey1 = GLFW.GLFW_KEY_F7;
+        config.menuKey2 = GLFW.GLFW_KEY_H;
+        config.toggleKey1 = GLFW.GLFW_KEY_LEFT_CONTROL;
+        config.toggleKey2 = GLFW.GLFW_KEY_H;
+        config.applyPortableKeyNames();
+
+        assertEquals(GLFW.GLFW_KEY_DELETE, config.menuKey1);
+        assertEquals(GLFW.GLFW_KEY_RIGHT, config.menuKey2);
+        assertEquals(-1, config.toggleKey1);
+        assertEquals(-1, config.toggleKey2);
+    }
+
+    @Test
+    void defaultShortcutNamesRoundTripAcrossInputBackends() {
+        ModConfig config = new ModConfig();
+        config.syncPortableKeyNames();
+        assertEquals("key.keyboard.f7", config.menuKey1Name);
+        assertEquals("key.keyboard.left.control", config.toggleKey1Name);
+        assertEquals("key.keyboard.i", config.immediateKey2Name);
+
+        config.menuKey1 = -2;
+        config.menuKey2 = -2;
+        config.toggleKey1 = -2;
+        config.toggleKey2 = -2;
+        config.immediateKey1 = -2;
+        config.immediateKey2 = -2;
+        config.applyPortableKeyNames();
+
+        assertEquals(GLFW.GLFW_KEY_F7, config.menuKey1);
+        assertEquals(GLFW.GLFW_KEY_H, config.menuKey2);
+        assertEquals(GLFW.GLFW_KEY_LEFT_CONTROL, config.toggleKey1);
+        assertEquals(GLFW.GLFW_KEY_H, config.toggleKey2);
+        assertEquals(GLFW.GLFW_KEY_F7, config.immediateKey1);
+        assertEquals(GLFW.GLFW_KEY_I, config.immediateKey2);
+    }}

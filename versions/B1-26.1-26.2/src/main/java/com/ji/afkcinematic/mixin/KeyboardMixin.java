@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyboardHandler.class)
 public class KeyboardMixin {
-    @Inject(method = "keyPress", at = @At("HEAD"), require = 0)
+    @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true, require = 0)
     private void onKeyPress(long window, int action, net.minecraft.client.input.KeyEvent event, CallbackInfo ci) {
         int keyCode = event.key();
         if (action == GLFW.GLFW_RELEASE) {
@@ -29,6 +29,14 @@ public class KeyboardMixin {
             return;
         }
         if (action != GLFW.GLFW_PRESS) return;
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE
+                && CinematicManager.getState() != CinematicState.IDLE
+                && com.ji.afkcinematic.ScreenHelper.getCurrentScreen(Minecraft.getInstance()) == null) {
+            CinematicManager.cancelForPause();
+            KeySequenceTracker.resetAll();
+            ci.cancel();
+            return;
+        }
         boolean cinematicActive = CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE;
         ModConfig shortcutConfig = ConfigManager.getConfig();
         boolean toggleStep = !(shortcutConfig.toggleKey1 == -1 && shortcutConfig.toggleKey2 == -1)
@@ -51,6 +59,14 @@ public class KeyboardMixin {
 
     private void registerKeyboardActivity(net.minecraft.client.input.KeyEvent event) {
         int keyCode = event.key();
+        if (CinematicManager.isFishingCinematic()) {
+            Minecraft client = Minecraft.getInstance();
+            if (client.options.keyUp.matches(event) || client.options.keyDown.matches(event)
+                    || client.options.keyLeft.matches(event) || client.options.keyRight.matches(event)) {
+                AFKDetector.registerActivity();
+            }
+            return;
+        }
         Minecraft client = Minecraft.getInstance();
         boolean chatOpen = com.ji.afkcinematic.ScreenHelper.getCurrentScreen(client) instanceof ChatScreen;
         CinematicInputPolicy.Event inputEvent = keyCode == GLFW.GLFW_KEY_ESCAPE

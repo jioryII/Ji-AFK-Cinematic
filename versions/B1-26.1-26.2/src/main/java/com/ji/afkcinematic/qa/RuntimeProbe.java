@@ -22,7 +22,8 @@ public final class RuntimeProbe {
     public static final String ENABLE_PROPERTY = "ji.afkcinematic.runtimeTest";
     public static final String PASS_MARKER = "JI_RUNTIME_TEST_PASS";
     private static final List<String> CRITICAL_MIXINS = List.of(
-            "CameraMixin", "InGameHudMixin", "KeyboardMixin", "MouseMixin", "MinecraftClientMixin");
+            "CameraMixin", "KeyboardMixin", "MouseMixin", "MinecraftClientMixin",
+            "ClientLevelFishingParticleMixin");
     private static int waitingTicks;
     private static int phase;
 
@@ -40,6 +41,11 @@ public final class RuntimeProbe {
         if (client.player == null || client.level == null) return;
         if (phase == 0) {
             for (String mixin : CRITICAL_MIXINS) check(MixinState.didApply(mixin), "critical mixin did not apply: " + mixin);
+            String version = net.fabricmc.loader.api.FabricLoader.getInstance()
+                    .getModContainer("minecraft").map(container -> container.getMetadata().getVersion().getFriendlyString())
+                    .orElse("");
+            String hudMixin = version.startsWith("26.2") ? "Hud262Mixin" : "InGameHudMixin";
+            check(MixinState.didApply(hudMixin), "critical mixin did not apply: " + hudMixin);
             ModConfig config = ConfigManager.getConfig();
             config.characterShotPercentage = 30;
             config.persistentMode = PersistentCinematicMode.INTERACTIVE;

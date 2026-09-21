@@ -20,13 +20,14 @@ public class JiAFKCinematic implements ClientModInitializer {
     private static final int MIXIN_DIAGNOSTIC_DELAY_TICKS = 200;
     private static final java.util.Set<String> CRITICAL_MIXINS = java.util.Set.of(
             "CameraMixin", "GameRendererMixin",
-            "KeyboardMixin", "MouseMixin", "MinecraftClientMixin");
+            "KeyboardMixin", "MouseMixin", "MinecraftClientMixin",
+            "ClientLevelFishingParticleMixin");
     private static int mixinDiagnosticTicks;
     private static boolean mixinDiagnosticComplete;
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("Initializing {} v2.3.1", MOD_NAME);
+        LOGGER.info("Initializing {} v{}", MOD_NAME, currentVersion());
         ConfigManager.loadConfig();
 
         com.ji.afkcinematic.input.GameplayActivityMonitor.init();
@@ -34,6 +35,7 @@ public class JiAFKCinematic implements ClientModInitializer {
         CinematicManager.init();
         CinematicMusicManager.init();
         LetterboxRenderer.init();
+        com.ji.afkcinematic.render.SleepLetterboxManager.init();
         com.ji.afkcinematic.qa.RuntimeProbe.initIfEnabled();
 
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
@@ -51,6 +53,11 @@ public class JiAFKCinematic implements ClientModInitializer {
             }
         });
 
+    }
+
+    private static String currentVersion() {
+        return net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer(MOD_ID)
+                .map(container -> container.getMetadata().getVersion().getFriendlyString()).orElse("unknown");
     }
 
     private static void reportMissingCriticalMixins() {

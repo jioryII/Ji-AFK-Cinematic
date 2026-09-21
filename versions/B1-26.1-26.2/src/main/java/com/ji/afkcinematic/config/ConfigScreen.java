@@ -30,6 +30,8 @@ public class ConfigScreen extends Screen {
     private Button immediateKeyButton;
     private Button openMusicFolderButton;
     private Button refreshMusicButton;
+    private Button changeMusicFolderButton;
+    private AbstractWidget fishingThresholdSlider;
 
     private Button reportButton;
     private final List<AbstractWidget> scrollableWidgets = new ArrayList<>();
@@ -64,9 +66,13 @@ public class ConfigScreen extends Screen {
         this.editConfig.extendedMusic = current.extendedMusic;
         this.editConfig.modEnabled = current.modEnabled;
         this.editConfig.enableLetterbox = current.enableLetterbox;
+        this.editConfig.sleepLetterboxMode = current.sleepLetterboxMode;
+        this.editConfig.fishingCinematicEnabled = current.fishingCinematicEnabled;
+        this.editConfig.fishingCinematicThresholdSeconds = current.fishingCinematicThresholdSeconds;
         this.editConfig.chatVisibility = current.chatVisibility;
         this.editConfig.enableMusic = current.enableMusic;
         this.editConfig.musicMode = current.musicMode;
+        this.editConfig.customMusicDirectory = current.customMusicDirectory;
         this.editConfig.menuKey1 = current.menuKey1;
         this.editConfig.menuKey2 = current.menuKey2;
         this.editConfig.toggleKey1 = current.toggleKey1;
@@ -223,8 +229,7 @@ public class ConfigScreen extends Screen {
                     editConfig.persistentMode = editConfig.persistentMode.next();
                     button.setMessage(getPersistentModeText());
                 }
-        ).tooltip(Tooltip.create(Component.translatable("config.ji_afkcinematic.tooltip.persistent_cinematics")
-                .append("\n").append(Component.literal("[BETA]").withStyle(ChatFormatting.YELLOW))))
+        ).tooltip(Tooltip.create(Component.translatable("config.ji_afkcinematic.tooltip.persistent_cinematics")))
          .bounds(col2X, yRight, widgetWidth, 20).build());
         yRight += entryHeight;
 
@@ -260,6 +265,16 @@ public class ConfigScreen extends Screen {
         yRight += entryHeight;
 
         this.addRenderableWidget(Button.builder(
+                getSleepLetterboxText(),
+                button -> {
+                    editConfig.sleepLetterboxMode = editConfig.sleepLetterboxMode.next();
+                    button.setMessage(getSleepLetterboxText());
+                }
+        ).tooltip(Tooltip.create(Component.translatable("config.ji_afkcinematic.tooltip.sleep_letterbox")))
+                .bounds(col2X, yRight, widgetWidth, 20).build());
+        yRight += entryHeight;
+
+        this.addRenderableWidget(Button.builder(
                 Component.translatable("config.ji_afkcinematic.music").append(": ").append(getOnOffText(editConfig.enableMusic)),
                 button -> {
                     editConfig.enableMusic = !editConfig.enableMusic;
@@ -288,11 +303,43 @@ public class ConfigScreen extends Screen {
          .bounds(col1X, yLeft, widgetWidth, 20).build());
         yLeft += entryHeight;
 
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("config.ji_afkcinematic.fishing_cinematic").append(": ")
+                        .append(getOnOffText(editConfig.fishingCinematicEnabled)),
+                button -> {
+                    editConfig.fishingCinematicEnabled = !editConfig.fishingCinematicEnabled;
+                    button.setMessage(Component.translatable("config.ji_afkcinematic.fishing_cinematic")
+                            .append(": ").append(getOnOffText(editConfig.fishingCinematicEnabled)));
+                    applyScrolling();
+                }
+        ).tooltip(Tooltip.create(Component.translatable("config.ji_afkcinematic.tooltip.fishing_cinematic")
+                .append("\n").append(Component.literal("[BETA]").withStyle(ChatFormatting.YELLOW))))
+                .bounds(col1X, yLeft, widgetWidth, 20).build());
+        yLeft += entryHeight;
+
+        fishingThresholdSlider = this.addRenderableWidget(new AbstractSliderButton(
+                col1X, yLeft, widgetWidth, 20,
+                Component.translatable("config.ji_afkcinematic.fishing_threshold",
+                        editConfig.fishingCinematicThresholdSeconds),
+                editConfig.fishingCinematicThresholdSeconds / 120.0
+        ) {
+            private int seconds() { return (int) Math.round(this.value * 120.0); }
+            @Override protected void updateMessage() {
+                this.setMessage(Component.translatable("config.ji_afkcinematic.fishing_threshold", seconds()));
+            }
+            @Override protected void applyValue() {
+                editConfig.fishingCinematicThresholdSeconds = seconds();
+                updateMessage();
+            }
+            { setTooltip(Tooltip.create(Component.translatable("config.ji_afkcinematic.tooltip.fishing_threshold"))); }
+        });
+        yLeft += entryHeight;
+
         int centerStartY = Math.max(yLeft, yRight) + 5;
 
         openMusicFolderButton = Button.builder(
                 Component.translatable("config.ji_afkcinematic.open_music_folder"),
-                button -> LocalMusicPackManager.openMusicFolder()
+                button -> LocalMusicPackManager.openMusicFolder(editConfig.customMusicDirectory)
         ).tooltip(Tooltip.create(Component.translatable("config.ji_afkcinematic.tooltip.open_music_folder")))
          .bounds(col1X, centerStartY, widgetWidth, 20).build();
         this.addRenderableWidget(openMusicFolderButton);
@@ -300,12 +347,29 @@ public class ConfigScreen extends Screen {
         refreshMusicButton = Button.builder(
                 Component.translatable("config.ji_afkcinematic.refresh_music"),
                 button -> {
-                    LocalMusicPackManager.rebuildAndReload();
-                    button.setMessage(Component.translatable("config.ji_afkcinematic.refresh_music_done"));
+                    button.active = false;
+                    LocalMusicPackManager.rebuildAndReloadAsync(trackCount -> {
+                        button.setMessage(Component.translatable("config.ji_afkcinematic.refresh_music_done"));
+                        button.active = true;
+                    });
                 }
         ).tooltip(Tooltip.create(Component.translatable("config.ji_afkcinematic.tooltip.refresh_music")))
          .bounds(col2X, centerStartY, widgetWidth, 20).build();
         this.addRenderableWidget(refreshMusicButton);
+        centerStartY += entryHeight;
+
+        changeMusicFolderButton = Button.builder(
+                Component.translatable("config.ji_afkcinematic.change_music_folder"),
+                button -> {
+                    button.active = false;
+                    LocalMusicPackManager.chooseMusicFolderAsync(editConfig.customMusicDirectory, selected -> {
+                        if (selected != null) editConfig.customMusicDirectory = selected;
+                        button.active = true;
+                    });
+                }
+        ).tooltip(Tooltip.create(Component.translatable("config.ji_afkcinematic.tooltip.change_music_folder")))
+         .bounds(col1X, centerStartY, widgetWidth, 20).build();
+        this.addRenderableWidget(changeMusicFolderButton);
         centerStartY += entryHeight + 5;
 
         // Menu shortcut. Clicking it starts the normal two-key rebind flow.
@@ -346,7 +410,7 @@ public class ConfigScreen extends Screen {
 
         this.reportButton = Button.builder(
                 Component.literal("§e⚠"),
-                ConfirmLinkScreen.confirmLink(this, "https://discord.gg/sE27D5SNaq")
+                ConfirmLinkScreen.confirmLink(this, java.net.URI.create("https://discord.gg/sE27D5SNaq"))
         ).tooltip(Tooltip.create(Component.translatable("config.ji_afkcinematic.tooltip.report"))).bounds(this.width - 35, this.height - 35, 30, 30).build();
         this.addRenderableWidget(this.reportButton);
 
@@ -367,10 +431,10 @@ public class ConfigScreen extends Screen {
                     boolean musicSettingsChanged = current.musicMode != editConfig.musicMode
                             || current.enableMusic != editConfig.enableMusic
                             || current.extendedMusic != editConfig.extendedMusic
-                            || LocalMusicPackManager.hasSourceChanges();
+                            || !java.util.Objects.equals(current.customMusicDirectory, editConfig.customMusicDirectory);
                     editConfig.recalculate();
                     ConfigManager.setConfig(editConfig);
-                    if (musicSettingsChanged) LocalMusicPackManager.rebuildAndReload();
+                    if (musicSettingsChanged) LocalMusicPackManager.rebuildAndReloadAsync(trackCount -> {});
                     this.onClose();
                 }
         ).bounds(centerX - 50, bottomY, 100, 20).build());
@@ -408,8 +472,12 @@ public class ConfigScreen extends Screen {
             int y = scrollableBaseY.get(widget) - contentScroll;
             widget.setY(y);
             boolean inside = y >= getContentTop() && y + widget.getHeight() <= viewportBottom;
-            boolean customMusicControl = widget == openMusicFolderButton || widget == refreshMusicButton;
-            widget.visible = inside && (!customMusicControl || editConfig.musicMode.includesCustom());
+            boolean customMusicControl = widget == openMusicFolderButton || widget == refreshMusicButton
+                    || widget == changeMusicFolderButton;
+            boolean fishingControl = widget == fishingThresholdSlider;
+            widget.visible = inside
+                    && (!customMusicControl || editConfig.musicMode.includesCustom())
+                    && (!fishingControl || editConfig.fishingCinematicEnabled);
             widget.active = widget.visible;
         }
     }
@@ -419,16 +487,7 @@ public class ConfigScreen extends Screen {
     }
 
     private void updateMusicFolderVisibility() {
-        if (openMusicFolderButton == null) return;
-        Integer baseY = scrollableBaseY.get(openMusicFolderButton);
-        int y = baseY == null ? openMusicFolderButton.getY() : baseY - contentScroll;
-        boolean inside = y >= getContentTop() && y + openMusicFolderButton.getHeight() <= this.height - 45;
-        openMusicFolderButton.visible = editConfig.musicMode.includesCustom() && inside;
-        openMusicFolderButton.active = openMusicFolderButton.visible;
-        if (refreshMusicButton != null) {
-            refreshMusicButton.visible = editConfig.musicMode.includesCustom() && inside;
-            refreshMusicButton.active = refreshMusicButton.visible;
-        }
+        applyScrolling();
     }
 
     public void scrollContent(double vertical) {
@@ -453,6 +512,18 @@ public class ConfigScreen extends Screen {
         String key = "config.ji_afkcinematic.persistent_mode."
                 + editConfig.persistentMode.name().toLowerCase();
         return Component.translatable("config.ji_afkcinematic.persistent_cinematics")
+                .append(": ").append(Component.translatable(key).withStyle(color));
+    }
+
+    private Component getSleepLetterboxText() {
+        String key = "config.ji_afkcinematic.sleep_letterbox_mode."
+                + editConfig.sleepLetterboxMode.name().toLowerCase();
+        ChatFormatting color = switch (editConfig.sleepLetterboxMode) {
+            case DISABLED -> ChatFormatting.GREEN;
+            case MODERATE -> ChatFormatting.YELLOW;
+            case COMPLETE -> ChatFormatting.GOLD;
+        };
+        return Component.translatable("config.ji_afkcinematic.sleep_letterbox")
                 .append(": ").append(Component.translatable(key).withStyle(color));
     }
 
@@ -549,6 +620,7 @@ public class ConfigScreen extends Screen {
         int titleY = this.height < 360 ? 17 : 55;
         context.centeredText(this.font, Component.literal("§6§lJi AFK Cinematic"), this.width / 2, titleY, 0xFFFFFFFF);
         context.centeredText(this.font, Component.literal("§5By jiory_"), this.width / 2, titleY + 10, 0xFFFFFFFF);
+        context.text(this.font, Component.translatable("config.ji_afkcinematic.footer"), 8, this.height - 12, 0xFFD8A7FF);
     }
 
     /**
@@ -571,13 +643,13 @@ public class ConfigScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         int keyCode = event.key();
-        if (rebindState == RebindState.IDLE && keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+        if (rebindState == RebindState.IDLE && keyCode == GLFW.GLFW_KEY_ESCAPE) {
             this.onClose();
             return true;
         }
         if (rebindState != RebindState.IDLE) {
             // ESC durante rebind
-            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 if (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.TOGGLE_WAITING_FIRST || rebindState == RebindState.IMMEDIATE_WAITING_FIRST) {
                     if (rebindState == RebindState.MENU_WAITING_FIRST) {
                         editConfig.menuKey1 = -1;
@@ -614,7 +686,7 @@ public class ConfigScreen extends Screen {
             int result = com.ji.afkcinematic.input.KeySequenceTracker.processRebindKey(keyCode, out);
             if (result == -1) { cancelRebind(); return true; }
 
-            // GLFW_KEY_UNKNOWN y codigos fuera de rango no son atajos persistibles.
+            // Unknown and out-of-range native codes are not persisted.
             if (result == com.ji.afkcinematic.input.KeySequenceTracker.UNSUPPORTED_KEY_REJECTED) {
                 Button target = (rebindState == RebindState.MENU_WAITING_FIRST || rebindState == RebindState.MENU_WAITING_SECOND)
                                   ? menuKeyButton : (rebindState == RebindState.TOGGLE_WAITING_FIRST || rebindState == RebindState.TOGGLE_WAITING_SECOND)
@@ -665,36 +737,19 @@ public class ConfigScreen extends Screen {
         com.ji.afkcinematic.ScreenHelper.setScreen(Minecraft.getInstance(), this.parent);
     }
 
-    /** Nombre legible para keycodes GLFW validos. */
+    /** Display names come from the active vanilla input backend. */
     private static String getKeyName(int keyCode) {
         if (keyCode == -1) return "NONE";
-
-        if (!com.ji.afkcinematic.input.KeySequenceTracker.isBindableKeyCode(keyCode)) {
+        if (!com.ji.afkcinematic.input.KeySequenceTracker.isBindableKeyCode(keyCode))
             return "Unsupported Key #" + keyCode;
-        }
-
         String name = GLFW.glfwGetKeyName(keyCode, 0);
         if (name != null) return name.toUpperCase();
-
+        if (keyCode >= GLFW.GLFW_KEY_F1 && keyCode <= GLFW.GLFW_KEY_F25)
+            return "F" + (keyCode - GLFW.GLFW_KEY_F1 + 1);
         return switch (keyCode) {
-            case GLFW.GLFW_KEY_F1 -> "F1";
-            case GLFW.GLFW_KEY_F2 -> "F2";
-            case GLFW.GLFW_KEY_F3 -> "F3";
-            case GLFW.GLFW_KEY_F4 -> "F4";
-            case GLFW.GLFW_KEY_F5 -> "F5";
-            case GLFW.GLFW_KEY_F6 -> "F6";
-            case GLFW.GLFW_KEY_F7 -> "F7";
-            case GLFW.GLFW_KEY_F8 -> "F8";
-            case GLFW.GLFW_KEY_F9 -> "F9";
-            case GLFW.GLFW_KEY_F10 -> "F10";
-            case GLFW.GLFW_KEY_F11 -> "F11";
-            case GLFW.GLFW_KEY_F12 -> "F12";
-            case GLFW.GLFW_KEY_LEFT_SHIFT -> "Shift";
-            case GLFW.GLFW_KEY_RIGHT_SHIFT -> "Shift";
-            case GLFW.GLFW_KEY_LEFT_CONTROL -> "Ctrl";
-            case GLFW.GLFW_KEY_RIGHT_CONTROL -> "Ctrl";
-            case GLFW.GLFW_KEY_LEFT_ALT -> "Alt";
-            case GLFW.GLFW_KEY_RIGHT_ALT -> "Alt";
+            case GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_RIGHT_SHIFT -> "Shift";
+            case GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_RIGHT_CONTROL -> "Ctrl";
+            case GLFW.GLFW_KEY_LEFT_ALT, GLFW.GLFW_KEY_RIGHT_ALT -> "Alt";
             case GLFW.GLFW_KEY_TAB -> "Tab";
             case GLFW.GLFW_KEY_SPACE -> "Space";
             case GLFW.GLFW_KEY_ENTER -> "Enter";
@@ -709,19 +764,6 @@ public class ConfigScreen extends Screen {
             case GLFW.GLFW_KEY_RIGHT -> "→";
             case GLFW.GLFW_KEY_UP -> "↑";
             case GLFW.GLFW_KEY_DOWN -> "↓";
-            case GLFW.GLFW_KEY_A -> "A"; case GLFW.GLFW_KEY_B -> "B"; case GLFW.GLFW_KEY_C -> "C";
-            case GLFW.GLFW_KEY_D -> "D"; case GLFW.GLFW_KEY_E -> "E"; case GLFW.GLFW_KEY_F -> "F";
-            case GLFW.GLFW_KEY_G -> "G"; case GLFW.GLFW_KEY_H -> "H"; case GLFW.GLFW_KEY_I -> "I";
-            case GLFW.GLFW_KEY_J -> "J"; case GLFW.GLFW_KEY_K -> "K"; case GLFW.GLFW_KEY_L -> "L";
-            case GLFW.GLFW_KEY_M -> "M"; case GLFW.GLFW_KEY_N -> "N"; case GLFW.GLFW_KEY_O -> "O";
-            case GLFW.GLFW_KEY_P -> "P"; case GLFW.GLFW_KEY_Q -> "Q"; case GLFW.GLFW_KEY_R -> "R";
-            case GLFW.GLFW_KEY_S -> "S"; case GLFW.GLFW_KEY_T -> "T"; case GLFW.GLFW_KEY_U -> "U";
-            case GLFW.GLFW_KEY_V -> "V"; case GLFW.GLFW_KEY_W -> "W"; case GLFW.GLFW_KEY_X -> "X";
-            case GLFW.GLFW_KEY_Y -> "Y"; case GLFW.GLFW_KEY_Z -> "Z";
-            case GLFW.GLFW_KEY_0 -> "0"; case GLFW.GLFW_KEY_1 -> "1"; case GLFW.GLFW_KEY_2 -> "2";
-            case GLFW.GLFW_KEY_3 -> "3"; case GLFW.GLFW_KEY_4 -> "4"; case GLFW.GLFW_KEY_5 -> "5";
-            case GLFW.GLFW_KEY_6 -> "6"; case GLFW.GLFW_KEY_7 -> "7"; case GLFW.GLFW_KEY_8 -> "8";
-            case GLFW.GLFW_KEY_9 -> "9";
             default -> "Key " + keyCode;
         };
     }

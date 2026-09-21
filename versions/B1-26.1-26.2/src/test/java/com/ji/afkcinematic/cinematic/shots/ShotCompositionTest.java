@@ -10,6 +10,7 @@ class ShotCompositionTest {
     void bothPoolsContainFifteenMovingCompositions() {
         assertEquals(15, ComposedCharacterShot.Preset.values().length);
         assertEquals(15, EnvironmentalShot.Preset.values().length);
+        assertEquals(5, FishingShot.Preset.values().length);
         for (ComposedCharacterShot.Preset preset : ComposedCharacterShot.Preset.values()) {
             assertNotEquals(0.0f, preset.sweep, preset.id + " must keep moving");
         }

@@ -62,6 +62,7 @@ public final class GameplayActivityMonitor {
     private static void register(CinematicInputPolicy.Event event, boolean chatOpen) {
         if (CinematicInputPolicy.shouldRegisterActivity(
                 CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE,
+                CinematicManager.isFishingCinematic(),
                 ConfigManager.getConfig().persistentMode,
                 chatOpen,
                 event)) {

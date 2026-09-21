@@ -22,7 +22,9 @@ Whether you’re chilling in your epic base, soaring with Elytra, or riding a mi
 
 ## ✨ **Live the Experience**
 
-- **10 cinematic shots** — sweeping crane shots, dramatic orbits, low gliding dolly cams, and epic panorama sweeps that make your world look legendary  
+- **15-shot cinematic cycles** — the configured character/environment percentage controls the real composition of every cycle
+- **Fishing cinematic** — optionally begins 10 seconds after casting by default and focuses on the angler and bobber during a bite
+- **Sleep letterbox** — optional immediate black bars while sleeping, compatible with screens replaced by sleep mods
 - **Butter-smooth tracking** — follows you perfectly even while flying, boating, falling, or riding — zero lag, zero jank  
 - **Smart safety net** — instantly wakes you up the second you take damage (or pauses the game if you want)  
 - **Pure immersion** — optional 21:9 letterbox bars + nostalgic C418 music that turns your break into a vibe  
@@ -58,7 +60,7 @@ Fully customizable in-game menu (Mod Menu support):
 **Requirements & Supported Versions**
 
 **Supported Minecraft Versions:**
-`1.21.x` - `26.1` - `26.2`
+`1.21–1.21.11` - `26.1–26.3`
 
 | Loader / Dependency | Version required | Status |
 |---------------------|------------------|-----------------|
@@ -68,3 +70,7 @@ Fully customizable in-game menu (Mod Menu support):
 
 **🎮 100% Client-Side** — Works on any server (Vanilla, Paper, Realms, etc.), no server-side installation needed!
 <br>
+
+## License
+
+Source code is distributed under the [Ji Mods Source License](LICENSE).

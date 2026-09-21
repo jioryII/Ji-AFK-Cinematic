@@ -6,6 +6,12 @@
   "mixins": [],
   "client": [
     "CameraMixin",
+    "FishingHookMixin",
+    "ClientLevelFishingParticleMixin",
+    "GuiPauseMixin",
+    "MinecraftPauseMixin",
+    "InBedScreenMixin",
+    "ScreenSleepBarsMixin",
     "ClientPlayerMovementMixin",
     "InGameHudMixin",
     "Hud262Mixin",

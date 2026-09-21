@@ -12,7 +12,7 @@
     "homepage": "https://discord.gg/sE27D5SNaq",
     "sources": "https://discord.gg/sE27D5SNaq"
   },
-  "license": "MIT",
+  "license": "Ji Mods Source License",
   "icon": "assets/ji-afk-cinematic/icon.png",
   "environment": "client",
   "entrypoints": {

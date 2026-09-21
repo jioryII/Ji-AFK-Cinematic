@@ -26,6 +26,23 @@ public final class CinematicInputPolicy {
                                                  PersistentCinematicMode mode,
                                                  boolean chatOpen,
                                                  Event event) {
+        return shouldRegisterActivity(cinematicActive, false, mode, chatOpen, event);
+    }
+
+    /**
+     * Fishing cinematics deliberately keep mouse look and gameplay clicks live
+     * without treating them as an AFK exit. Only actual movement and Escape
+     * end this kind of session; lifecycle and damage exits are handled by the
+     * cinematic manager.
+     */
+    public static boolean shouldRegisterActivity(boolean cinematicActive,
+                                                 boolean fishingCinematic,
+                                                 PersistentCinematicMode mode,
+                                                 boolean chatOpen,
+                                                 Event event) {
+        if (cinematicActive && fishingCinematic) {
+            return event == Event.MOVE || event == Event.ESCAPE;
+        }
         if (event == Event.ESCAPE) return true;
         if (chatOpen || event == Event.CHAT_OPEN || event == Event.CHAT_INPUT) {
             return cinematicActive && (mode == null || mode == PersistentCinematicMode.NORMAL);

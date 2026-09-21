@@ -1,21 +1,51 @@
-MIT License
+Ji Mods Source License
 
-Copyright (c) 2026 Jiory
+Copyright (c) 2026 Jiory_
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is granted, free of charge, to view, study, modify, and compile the source code of projects
+distributed under this License ("Ji Mods"), subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. Personal Use and Development
+You may modify and compile the Software for personal use, testing, research, development, or contribution purposes.
+Public source-code forks are permitted for development and contribution purposes, provided the original copyright
+and license notices are preserved.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. Add-ons and Compatibility
+You may create and distribute separate add-ons, integrations, compatibility layers, resource packs, extensions, or other projects that interact with Ji Mods.
+Such projects must remain separate from the original Software and must not redistribute substantial portions of its source code or binaries.
+They may state that they are compatible with, depend on, or are made for a Ji Mod, but must not imply that they are official unless explicitly authorized.
+
+3. Modpacks
+Official, unmodified versions of Ji Mods may be included in modpacks, provided proper credit is given and the mod is not presented as the work of another author.
+When possible, official download or dependency systems provided by platforms such as Modrinth or CurseForge should be used.
+
+4. Redistribution and Modified Copies
+You may not redistribute, reupload, mirror, or publish the Software or modified versions of it as a separate or
+competing project without explicit permission from the copyright holder.
+
+This includes versions that have been:
+* renamed or rebranded;
+* visually modified;
+* refactored or reorganized;
+* ported to another Minecraft version, mod loader, or platform;
+* modified by adding, removing, or changing features;
+* repackaged with different assets, metadata, or branding.
+Changing a certain amount or percentage of the code does not automatically make redistribution permitted if the project is substantially derived from a Ji Mod.
+Independent projects with similar functionality that do not copy or derive from Ji Mods are not restricted by this License.
+
+5. Commercial Redistribution
+The Software or modified versions of it may not be sold, placed behind a paywall, or commercially redistributed without explicit permission.
+This does not prevent monetized videos, streams, donations, sponsorships, or other content created using the Software.
+
+6. Branding
+The names, logos, icons, and other branding associated with Ji Mods may not be used in a way that falsely suggests an unofficial project is official or endorsed.
+The project name may be used descriptively for compatibility, dependency, or attribution purposes.
+
+7. Permission and Exceptions
+The copyright holder may grant additional permissions or exceptions for specific projects, ports, forks, or distributions.
+Such permission does not automatically apply to other users or projects.
+
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES,
+OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.

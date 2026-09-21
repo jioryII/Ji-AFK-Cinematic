@@ -56,6 +56,7 @@ public class MouseMixin {
         boolean chatOpen = com.ji.afkcinematic.ScreenHelper.getCurrentScreen(client) instanceof ChatScreen;
         if (CinematicInputPolicy.shouldRegisterActivity(
                 CinematicManager.getState() == CinematicState.CINEMATIC_ACTIVE,
+                CinematicManager.isFishingCinematic(),
                 ConfigManager.getConfig().persistentMode, chatOpen, event)) {
             AFKDetector.registerActivity();
         }
