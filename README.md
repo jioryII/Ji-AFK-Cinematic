@@ -1,11 +1,4 @@
-![portada](https://raw.githubusercontent.com/jioryII/Ji-Assets/main/ji-afk/portada-ji-afk.png)
-
-<p align="center" style="text-align: center;">
-  <a href="https://discord.gg/sE27D5SNaq"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Discord-Button-64.png" alt="Discord" width="7%"></a>
-  <a href="https://github.com/jioryII/Ji-AFK-Cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Github-Button-64.png" alt="GitHub" width="7%"></a>
-  <a href="https://modrinth.com/mod/ji-afk-cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Modrinth-Button-64.png" alt="Modrinth" width="7%"></a>
-</p>
-
+![portada](https://raw.githubusercontent.com/jioryII/Ji-Assets/main/ji-afk/portada-ji-afk.png) <p align="center" style="text-align: center;"> <a href="https://discord.gg/sE27D5SNaq"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Discord-Button-64.png" alt="Discord" width="7%"></a> <a href="https://github.com/jioryII/Ji-AFK-Cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Github-Button-64.png" alt="GitHub" width="7%"></a> <a href="https://modrinth.com/mod/ji-afk-cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Modrinth-Button-64.png" alt="Modrinth" width="7%"></a> <a href="https://www.curseforge.com/minecraft/mc-mods/ji-afk-cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Curseforge-Button-64.png" alt="CurseForge" width="7%"></a> <a href="https://ko-fi.com/jiory_"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Kofi-Button-64.png" alt="Ko-fi" width="7%"></a> </p>
 
 
 <p align="center"><img src="https://media.tenor.com/L8MBo0DXxoEAAAAj/minecraft.gif" width="200"/></p>
