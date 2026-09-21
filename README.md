@@ -50,6 +50,8 @@ Fully customizable in-game menu (Mod Menu support):
 • Nametag visibility  
 • Damage protection style  
 
+**Music guides:** [Use your own local `.ogg` files](LOCAL-MUSIC.md) · [Create a compatible resource-pack music library](RESOURCE-PACK-MUSIC.md)
+
 **Languages:** English + Español (LatAm & Spain)
 <br>
 

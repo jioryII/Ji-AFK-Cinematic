@@ -2,6 +2,8 @@
 
 Ji-AFK Cinematic automatically respects resource packs that replace the Vanilla music events it already uses. No additional configuration is required for replacements.
 
+If you only want to play downloaded `.ogg` files from a folder on your computer, follow [Using Your Own Local Music](LOCAL-MUSIC.md) instead.
+
 To add new music to the cinematic track pool, enable a music mode that includes custom tracks and declare the sound events in your resource pack.
 
 ## Required structure
