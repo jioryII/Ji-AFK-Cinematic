@@ -1,0 +1,6 @@
+pluginManagement { repositories { gradlePluginPortal() } }
+rootProject.name = 'ji-afk-cinematic-3Ne-1.21.6-1.21.8'
+include ':ji-afk-core', ':ji-afk-services', ':ji-afk-client'
+project(':ji-afk-core').projectDir = file('../../ji-afk-core')
+project(':ji-afk-services').projectDir = file('../../ji-afk-services')
+project(':ji-afk-client').projectDir = file('../../ji-afk-client')

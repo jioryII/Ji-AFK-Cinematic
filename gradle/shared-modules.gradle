@@ -1,0 +1,71 @@
+// Bundle the shared JVM classes once. Package identities remain stable while
+// the remaining gameplay code is moved behind platform ports.
+dependencies {
+    implementation project(':ji-afk-core')
+    implementation project(':ji-afk-services')
+    implementation project(':ji-afk-client')
+}
+
+sourceSets.main.java.srcDir '../../minecraft-profiles/common-diagnostics/src/main/java'
+sourceSets.main.java.srcDir(plugins.hasPlugin('net.neoforged.moddev')
+        ? '../../platforms/neoforge/common-diagnostics/src/main/java'
+        : '../../platforms/fabric/common-diagnostics/src/main/java')
+
+// Fingerprint the actual assembled sources and pins; generated data contains no host paths.
+def buildIdentityDirectory = layout.buildDirectory.dir('generated/ji-build-identity')
+def identityInputs = files(sourceSets.main.allJava, sourceSets.main.resources.srcDirs.collect { fileTree(it) },
+        ['ji-afk-core', 'ji-afk-services', 'ji-afk-client'].collect { project(":${it}").sourceSets.main.allSource },
+        file('../../build-targets.json'), fileTree('../../gradle') { include '*.gradle' },
+        file('build.gradle'), file('gradle.properties'))
+tasks.register('generateJiBuildIdentity') {
+    inputs.files(identityInputs)
+    inputs.property('version', project.version.toString())
+    outputs.dir(buildIdentityDirectory)
+    doLast {
+        def digest = java.security.MessageDigest.getInstance('SHA-256')
+        def workspace = file('../..').toPath()
+        identityInputs.files.findAll { it.isFile() }.sort { workspace.relativize(it.toPath()).toString() }.each {
+            digest.update(workspace.relativize(it.toPath()).toString().replace('\\', '/').getBytes('UTF-8'))
+            digest.update((byte)0)
+            digest.update(it.bytes)
+        }
+        digest.update(project.version.toString().getBytes('UTF-8'))
+        def directory = buildIdentityDirectory.get().asFile
+        directory.mkdirs()
+        new File(directory, 'ji-afk-build-id.txt').setText('sha256:' + HexFormat.of().formatHex(digest.digest()) + '\n', 'UTF-8')
+    }
+}
+sourceSets.main.resources.srcDir(buildIdentityDirectory)
+tasks.named('processResources') { dependsOn 'generateJiBuildIdentity' }
+
+// Audio refresh signatures changed independently from other client APIs.
+def mojmapAudio = project.minecraft_version.startsWith('26.') || plugins.hasPlugin('net.neoforged.moddev')
+        || project.findProperty('ji_afk_mappings') == 'mojmap'
+if (mojmapAudio) {
+    sourceSets.main.java.srcDir '../../minecraft-profiles/mojmap-audio-common/src/main/java'
+    def audioProfile = project.minecraft_version in ['1.21.9', '1.21.10']
+            ? 'mojmap-audio-1.21.9-1.21.10' : 'mojmap-audio'
+    if (project.minecraft_version.startsWith('1.21') && !(project.minecraft_version in ['1.21.9', '1.21.10', '1.21.11'])) {
+        audioProfile = 'mojmap-audio-1.21-1.21.8'
+    }
+    sourceSets.main.java.srcDir "../../minecraft-profiles/${audioProfile}/src/main/java"
+} else {
+    sourceSets.main.java.srcDir '../../minecraft-profiles/yarn-audio-common/src/main/java'
+    def audioAbi = project.minecraft_version == '1.21.11' ? '1.21.11'
+            : project.minecraft_version in ['1.21.9', '1.21.10'] ? '1.21.9-1.21.10' : '1.21-1.21.8'
+    sourceSets.main.java.srcDir "../../minecraft-profiles/yarn-audio-${audioAbi}/src/main/java"
+}
+tasks.named('jar', Jar) {
+    dependsOn ':ji-afk-core:classes', ':ji-afk-services:classes', ':ji-afk-client:classes'
+    from { project(':ji-afk-core').sourceSets.main.output }
+    from { project(':ji-afk-services').sourceSets.main.output }
+    from { project(':ji-afk-client').sourceSets.main.output }
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+}
+tasks.matching { it.name == 'sourcesJar' }.configureEach {
+    dependsOn 'generateJiBuildIdentity'
+    from { project(':ji-afk-core').sourceSets.main.allSource }
+    from { project(':ji-afk-services').sourceSets.main.allSource }
+    from { project(':ji-afk-client').sourceSets.main.allSource }
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+}

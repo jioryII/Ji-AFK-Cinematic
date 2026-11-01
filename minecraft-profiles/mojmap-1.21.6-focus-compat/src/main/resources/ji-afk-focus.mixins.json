@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "com.ji.afkcinematic.focus.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["FocusGameRendererMixin", "FocusReloadMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

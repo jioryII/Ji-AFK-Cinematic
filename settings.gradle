@@ -1,0 +1,2 @@
+rootProject.name = 'ji-afk-cinematic'
+include 'ji-afk-core', 'ji-afk-services', 'ji-afk-client'

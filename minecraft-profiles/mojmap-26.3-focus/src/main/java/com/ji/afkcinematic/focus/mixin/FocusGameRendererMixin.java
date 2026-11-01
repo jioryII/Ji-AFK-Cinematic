@@ -1,0 +1,35 @@
+package com.ji.afkcinematic.focus.mixin;
+
+import com.ji.afkcinematic.focus.FocusRenderer;
+import com.ji.afkcinematic.focus.FocusScene;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.renderer.GameRenderer;
+import org.joml.Matrix4f;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(GameRenderer.class)
+public class FocusGameRendererMixin {
+    @Inject(method = "extract", at = @At("RETURN"), require = 1)
+    private void jiFocus$extract(DeltaTracker delta, boolean advance, CallbackInfo ci) {
+        FocusScene.extract(((GameRenderer)(Object)this).gameRenderState().levelRenderState.cameraRenderState,
+                delta.getGameTimeDeltaPartialTick(false), advance);
+    }
+    @Inject(method = "render", at = @At("HEAD"), require = 1)
+    private void jiFocus$begin(CallbackInfo ci) { FocusRenderer.beginFrame(); }
+    @ModifyArg(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;getBuffer(Lorg/joml/Matrix4f;)Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;"), index = 0, require = 1)
+    private Matrix4f jiFocus$worldProjection(Matrix4f matrix) { FocusRenderer.projection(matrix); return matrix; }
+    @Inject(method = "render3dHud", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/CommandEncoder;clearDepthTexture(Lcom/mojang/renderpearl/api/textures/GpuTexture;D)V"), require = 1)
+    private void jiFocus$depthBeforeHand(CallbackInfo ci) {
+        FocusRenderer.captureDepth(((GameRenderer)(Object)this).mainRenderTarget());
+    }
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/fog/FogRenderer;endFrame()V"), require = 1)
+    private void jiFocus$beforeGui(CallbackInfo ci) {
+        FocusRenderer.render(((GameRenderer)(Object)this).mainRenderTarget());
+    }
+    @Inject(method = "close", at = @At("HEAD"), require = 1)
+    private void jiFocus$close(CallbackInfo ci) { FocusRenderer.close(); }
+}

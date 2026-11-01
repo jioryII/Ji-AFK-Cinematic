@@ -1,0 +1,8 @@
+{
+  "profile": "mojmap-26.1.1",
+  "minecraftVersion": "26.1.1",
+  "java": 25,
+  "mappingNamespace": "official Mojang (unobfuscated)",
+  "sourceRoot": "minecraft-profiles/mojmap-26.1-26.2",
+  "screenProfile": "mojmap-screen-26.1"
+}

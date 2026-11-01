@@ -1,0 +1,81 @@
+plugins { id 'net.fabricmc.fabric-loom-remap' version '1.14.10' }
+
+version = project.mod_version
+group = 'com.ji'
+base.archivesName = "ji-afk-cinematic-fabric-${project.minecraft_version}"
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.withSourcesJar()
+repositories { maven { url = 'https://maven.terraformersmc.com/releases/' } }
+
+// Select the exact vanilla API profile, shared with native NeoForge.
+def exactMinecraft = project.minecraft_version
+if (!(exactMinecraft in ['1.21.9', '1.21.10', '1.21.11'])) {
+    throw new GradleException("No developing exact Mojmap profile for ${exactMinecraft} in 4Fa yet.")
+}
+def registry = new groovy.json.JsonSlurper().parse(file('../../build-targets.json'))
+def exactLoader = registry.profiles[exactMinecraft].fabric.loader
+def exactFabricApi = registry.profiles[exactMinecraft].fabric.api
+def exactModMenu = exactMinecraft == '1.21.11' ? '17.0.1' : '16.0.0'
+['loader_version': exactLoader, 'fabric_version': exactFabricApi].each { name, pinned ->
+    if (gradle.startParameter.projectProperties.containsKey(name) && project.property(name) != pinned) {
+        throw new GradleException("Use the pinned ${name} for this exact Minecraft profile.")
+    }
+}
+def experimentalLegacy = exactMinecraft in ['1.21.9', '1.21.10']
+def sourceProfile = experimentalLegacy ? 'mojmap-1.21.9-compat' : "mojmap-${exactMinecraft}"
+sourceSets.main.java.srcDir "../../minecraft-profiles/${sourceProfile}/src/main/java"
+sourceSets.main.java.srcDir "../../platforms/fabric/mojmap-${exactMinecraft}/src/main/java"
+sourceSets.main.resources.srcDir "../../minecraft-profiles/${sourceProfile}/src/main/resources"
+sourceSets.test.java.srcDir "../../minecraft-profiles/${sourceProfile}/src/test/java"
+
+if (experimentalLegacy) {
+    sourceSets.main.java.srcDir '../../minecraft-profiles/mojmap-1.21.9-focus-compat/src/main/java'
+    sourceSets.main.resources.srcDir '../../minecraft-profiles/mojmap-1.21.9-focus-compat/src/main/resources'
+}
+if (exactMinecraft == '1.21.11') {
+    sourceSets.main.java.srcDir '../../minecraft-profiles/mojmap-1.21.11-focus/src/main/java'
+    sourceSets.main.resources.srcDir '../../minecraft-profiles/mojmap-1.21.11-focus/src/main/resources'
+
+}
+
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${exactLoader}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${exactFabricApi}"
+    modCompileOnly "com.terraformersmc:modmenu:${exactModMenu}"
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+tasks.withType(JavaCompile).configureEach { options.release = 21 }
+tasks.named('test') { useJUnitPlatform() }
+tasks.named('processResources') {
+    inputs.properties(version: project.version, minecraft_version: project.minecraft_version,
+                      loader_version: exactLoader, fabric_version: exactFabricApi)
+    filesMatching('fabric.mod.json') {
+        expand version: project.version, minecraft_version: project.minecraft_version,
+               loader_version: exactLoader, fabric_version: exactFabricApi
+    }
+}
+tasks.named('jar') { from('../../LICENSE') }
+apply from: file('../../gradle/shared-modules.gradle')
+
+tasks.register('verifyFabricLoaderBoundary') {
+    dependsOn 'classes'
+    doLast {
+        sourceSets.main.allJava.each { source ->
+            assert !(source.getText('UTF-8') =~ /\b(net\.neoforged|net\.minecraftforge|org\.sinytra)\./):
+                "Native NeoForge/Forge dependency in Fabric source: $source"
+        }
+        configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            assert !(artifact.moduleVersion.id.group =~ /neoforged|minecraftforge|sinytra/):
+                "Native loader dependency in Fabric runtime: ${artifact.moduleVersion.id}"
+        }
+    }
+}
+tasks.named('check') { dependsOn 'verifyFabricLoaderBoundary' }
+
+
+
+

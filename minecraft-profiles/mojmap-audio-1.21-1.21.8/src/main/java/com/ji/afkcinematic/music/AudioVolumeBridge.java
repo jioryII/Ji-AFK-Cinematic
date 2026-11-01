@@ -1,0 +1,15 @@
+package com.ji.afkcinematic.music;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.sounds.SoundSource;
+
+/** Refresh the older sound API with the actual saved preference, applying gain in SoundEngine. */
+public final class AudioVolumeBridge {
+    private AudioVolumeBridge() { }
+    public static void refresh(Minecraft client) {
+        if (client != null && client.getSoundManager() != null) {
+            client.getSoundManager().updateSourceVolume(SoundSource.MUSIC,
+                    client.options.getSoundSourceVolume(SoundSource.MUSIC));
+        }
+    }
+}

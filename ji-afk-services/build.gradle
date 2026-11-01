@@ -1,0 +1,9 @@
+plugins { id 'java-library' }
+group = 'com.ji'
+version = '2.4.0'
+repositories { mavenCentral() }
+java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
+tasks.withType(JavaCompile).configureEach { options.release = 21 }
+dependencies {
+    implementation project(':ji-afk-core')
+}

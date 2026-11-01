@@ -1,0 +1,36 @@
+{
+  "required": true,
+  "package": "com.ji.afkcinematic.mixin",
+  "plugin": "com.ji.afkcinematic.mixin.JiAFKCinematicMixinPlugin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [],
+  "client": [
+    "CameraMixin",
+    "ClientLevelFishingParticleMixin",
+    "FishingHookMixin",
+    "GuiPauseMixin",
+    "InBedScreenMixin",
+    "ScreenSleepBarsMixin",
+    "ClientInputAccessor",
+    "ClientPlayerMovementMixin",
+    "InGameHudMixin",
+    "ToastMixin",
+    "Hud262Mixin",
+    "GameRendererMixin",
+    "MinecraftClientMixin",
+    "MouseMixin",
+    "KeyboardMixin",
+    "PlayerNameRendererMixin",
+    "EntityRenderDispatcherMixin",
+    "MusicManagerMixin",
+    "SoundManagerMixin",
+    "SoundEngineGainMixin",
+    "ChatHistoryMixin",
+    "ChatVisibilityMixin",
+    "CameraConsumptionMixin",
+    "ResourceLayoutMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "ji-afk-cinematic",
+  "version": "${version}",
+  "name": "Ji AFK Cinematic",
+  "description": "Cinematic AFK camera, sleep and fishing scenes for Minecraft.",
+  "authors": [
+    "jiory_"
+  ],
+  "contributors": [
+    "Softie (PioMine): smart camera side selection"
+  ],
+  "license": "Ji Mods Source License",
+  "icon": "assets/ji-afk-cinematic/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.ji.afkcinematic.platform.FabricClientEntrypoint"
+    ],
+    "modmenu": [
+      "com.ji.afkcinematic.config.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "ji-afk-cinematic.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "${minecraft_version}",
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": ">=${fabric_version}",
+    "java": ">=21"
+  },
+  "suggests": {
+    "modmenu": "*"
+  },
+  "contact": {
+    "homepage": "https://ji-afk-cinematic.ji-mods.com",
+    "issues": "https://ji-afk-cinematic.ji-mods.com/en/support/"
+  }
+}

@@ -1,71 +1,42 @@
-![portada](https://raw.githubusercontent.com/jioryII/Ji-Assets/main/ji-afk/portada-ji-afk.png) <p align="center" style="text-align: center;"> <a href="https://discord.gg/sE27D5SNaq"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Discord-Button-64.png" alt="Discord" width="7%"></a> <a href="https://github.com/jioryII/Ji-AFK-Cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Github-Button-64.png" alt="GitHub" width="7%"></a> <a href="https://modrinth.com/mod/ji-afk-cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Modrinth-Button-64.png" alt="Modrinth" width="7%"></a> <a href="https://www.curseforge.com/minecraft/mc-mods/ji-afk-cinematic"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Curseforge-Button-64.png" alt="CurseForge" width="7%"></a> <a href="https://ko-fi.com/jiory_"><img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/shared/buttons/Kofi-Button-64.png" alt="Ko-fi" width="7%"></a> </p>
+![Ji AFK Cinematic](https://raw.githubusercontent.com/jioryII/Ji-Assets/main/ji-afk/portada-ji-afk.png)
 
+# Ji AFK Cinematic 2.4.0
 
-<p align="center"><img src="https://media.tenor.com/L8MBo0DXxoEAAAAj/minecraft.gif" width="200"/></p>
+A client-side cinematic camera for Minecraft: AFK shots, fishing scenes, sleep letterboxing and configurable music.
 
-## Turn every idle second into a Hollywood-worthy Minecraft masterpiece
+Fabric **2.4.0** and NeoForge **2.4.0-beta.1.1** support these Minecraft groups:
 
-No more lifeless staring at a wall. The moment you go AFK, Ji AFK Cinematic instantly transforms your screen into a breathtaking cinematic experience — smooth, dramatic camera work that makes your character, your builds, and your world feel like the star of a AAA movie trailer.
+| Group | Minecraft |
+|---|---|
+| A1 | 1.21â€“1.21.1 |
+| A2 | 1.21.2â€“1.21.5 |
+| A3 | 1.21.6â€“1.21.8 |
+| A4 | 1.21.9â€“1.21.11 |
+| B1 | 26.1â€“26.2 |
+| B2 | 26.3 |
 
-Whether you’re chilling in your epic base, soaring with Elytra, or riding a minecart through the night, your AFK time now feels alive, cinematic, and genuinely relaxing.
-<br>
+Choose one JAR from [compilaciones](compilaciones/) for your Minecraft version and loader. Fabric requires Fabric API; Mod Menu is optional. NeoForge uses its native loader. Install Java 21 for 1.21.x and Java 25 for 26.x. Nothing is required on the server.
 
-----
-<p align="center"><img src="https://media.baamboozle.com/uploads/images/1685107/b568c184-580b-4f9c-bb43-522fb8ca720c.gif" width="70"/></p>
+- **F7 + H:** settings.
+- **F7 + U:** enable or disable the mod.
+- **F7 + I:** start or stop a cinematic.
 
-## ✨ **Live the Experience**
+Shortcuts can be changed. The initial shot mix is 50% character and 50% environment; existing saved choices are preserved. Music supports vanilla tracks, your local Ogg Vorbis library, or both. See [local music](LOCAL-MUSIC.md) and [resource-pack music](RESOURCE-PACK-MUSIC.md).
 
-- **15-shot cinematic cycles** — the configured character/environment percentage controls the real composition of every cycle
-- **Fishing cinematic** — optionally begins 10 seconds after casting by default and focuses on the angler and bobber during a bite
-- **Sleep letterbox** — optional immediate black bars while sleeping, compatible with screens replaced by sleep mods
-- **Butter-smooth tracking** — follows you perfectly even while flying, boating, falling, or riding — zero lag, zero jank  
-- **Smart safety net** — instantly wakes you up the second you take damage (or pauses the game if you want)  
-- **Pure immersion** — optional 21:9 letterbox bars + nostalgic C418 music that turns your break into a vibe  
-- **Instant return** — move your mouse or press any key and you’re back in full control instantly  
-<br>
----
-<p align="center"><img src="https://preview.redd.it/creeper-gif-i-made-i-gave-up-on-the-explosion-v0-64rdrjmesq761.gif?width=704&auto=webp&s=cb2cf08931ba28b85a08b6705a92dd9f91c13174" width="90"/></p>
+Optical focus is temporarily disabled and its setting is hidden. Its source and shaders remain available for future work.
 
-## Immersive AFK cinematic system with smooth camera paths
+## Build
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/jioryII/Ji-Assets/main/ji-afk/showcase-ji-afk.gif" width="80%" />
-</p>
+Install JDK 21 and JDK 25, set `JAVA_HOME` to JDK 25, and install Python 3.11 or newer. Gradle discovers the JDK 21 toolchain from a standard installation, or use `--java21-home /path/to/jdk-21` if it is not detected.
 
-----
-<p align="center"><img src="https://static.wikia.nocookie.net/minecraft/images/c/cb/Axolotl_%28lucy%29.gif/revision/latest?cb=20201217015152" width="90"/></p>
+```sh
+python tools/build-release.py
+```
 
-## ⚙️ **Made for You**
+This compiles the 34 native adapters and assembles twelve grouped JARs in `compilaciones/`. It does not start Minecraft. Use `--offline` after dependencies and assets have been cached, and `--output NAME` to preserve previous grouped builds. Each `versions/` project can also be built separately with its wrapper and `-Pminecraft_version=VERSION`.
 
-Fully customizable in-game menu (Mod Menu support):  
-• AFK timer (seconds until magic starts)  
-• Shot length & camera speed  
-• Nametag visibility  
-• Damage protection style  
+Fabric groups contain their version-specific implementations as nested dependencies. NeoForge groups isolate differing classes, mixins and shader resources and select the implementation matching the loader's Minecraft version.
 
-**Music guides:** [Use your own local `.ogg` files](LOCAL-MUSIC.md) · [Create a compatible resource-pack music library](RESOURCE-PACK-MUSIC.md)
+[Website](https://ji-afk-cinematic.ji-mods.com) Â· [Support](https://ji-afk-cinematic.ji-mods.com/en/support/) Â· [Discord](https://discord.gg/sE27D5SNaq) Â· [Modrinth](https://modrinth.com/mod/ji-afk-cinematic)
 
-**Languages:** English + Español (LatAm & Spain)
-<br>
-
-----
-<p align="center"><img src="https://media.tenor.com/dAUri9d0nUsAAAAj/minecraft-minecraft-totem.gif" width="60"/></p>
-
-
-**Requirements & Supported Versions**
-
-**Supported Minecraft Versions:**
-`1.21–1.21.11` - `26.1–26.3`
-
-| Loader / Dependency | Version required | Status |
-|---------------------|------------------|-----------------|
-| **Fabric Loader**   | Matches your MC  | 🔴 **Required** |
-| **Fabric API**      | Latest available | 🔴 **Required** |
-| **Mod Menu**        | Latest available | 🟢 *Recommended* (For in-game settings) |
-
-**🎮 100% Client-Side** — Works on any server (Vanilla, Paper, Realms, etc.), no server-side installation needed!
-<br>
-
-## License
-
-Source code is distributed under the [Ji Mods Source License](LICENSE).
+Licensed under the [Ji Mods Source License](LICENSE).
