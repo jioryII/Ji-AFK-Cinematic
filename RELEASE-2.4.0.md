@@ -8,4 +8,4 @@
 - One main Mod Menu entry with localized text and working website/support links.
 - Optical focus temporarily hidden and disabled while its implementation remains in the source.
 
-Install only the JAR for your Minecraft group and loader from `compilaciones/`. Fabric API is required on Fabric; Mod Menu is optional. No server installation is needed.
+Install only the JAR for your Minecraft group and loader from `versions/`. Fabric API is required on Fabric; Mod Menu is optional. No server installation is needed.

@@ -1,6 +1,0 @@
-plugins {
-    id 'java-library'
-    id 'net.neoforged.moddev' version '2.0.147'
-}
-
-apply from: file('../../gradle/exact-mojmap-26-assembly.gradle')

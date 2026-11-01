@@ -1,12 +1,11 @@
+*.class
+*.log
 .gradle/
-**/build/
 build/
+**/build/
 run/
 logs/
-*.log
-*.class
-__pycache__/
-*.py[cod]
 .idea/
 .vscode/
-.env*
+.DS_Store
+Thumbs.db

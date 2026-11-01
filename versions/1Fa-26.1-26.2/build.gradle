@@ -1,2 +1,0 @@
-plugins { id 'net.fabricmc.fabric-loom' version '1.17.7' }
-apply from: file('../../gradle/exact-mojmap-26-assembly.gradle')

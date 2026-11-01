@@ -1,9 +1,0 @@
-{
-  "profile": "mojmap-1.21.6",
-  "minecraftVersion": "1.21.6",
-  "java": 21,
-  "mappingNamespace": "official Mojang",
-  "sourceRoot": "minecraft-profiles/mojmap-1.21.8",
-  "platformProfile": "mojmap-1.21.8",
-  "modmenuCompileApi": "14.0.0-beta.1"
-}
